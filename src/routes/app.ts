@@ -5,8 +5,8 @@ import { questionsRequestSchema } from "../schemes/questionRequest";
 
 
 
-const questionRouter = Router()
 
-questionRouter.post("/ask", validateBody(questionsRequestSchema), askQuestion)
+const appRouter = Router()
+appRouter.post("/ask", validateBody(questionsRequestSchema), askQuestion)
 
-export default questionRouter
+export default appRouter
