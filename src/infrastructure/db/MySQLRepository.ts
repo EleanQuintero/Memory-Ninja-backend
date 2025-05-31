@@ -2,7 +2,7 @@ import { pool } from "./mysql";
 import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { flashcardData } from "../../models/interfaces/flashcardData";
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { QueryResult, ResultSetHeader, RowDataPacket } from 'mysql2';
 
 
 export class MySQLRepository implements IUserRepository {
@@ -109,4 +109,22 @@ export class MySQLRepository implements IUserRepository {
         }
     }
 
+
+    async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: RowDataPacket[]; }> {
+        try {
+          console.log(user_id)
+          const [result] = await pool.query(
+            `SELECT fd.question,  fd.answer, t.theme_name AS theme
+              FROM flashcard_data fd 
+              JOIN themes t ON fd.theme_id = t.theme_id
+              WHERE fd.user_id = ?`,
+              [user_id],
+            )
+            return {success: true, message:"Datos obtenidos de forma exitosa", data: result as RowDataPacket[]}
+          } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido' )
+            throw new Error(`Error al obtener los datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+          
+        }
+    }
 }
