@@ -3,8 +3,12 @@ import { userService } from "../infrastructure/di/userContainer";
 
 export const getFlashcardController = async (req: Request, res: Response): Promise<void> => {
     try {
-
-        const response = await userService.getFlashCards(req.body.user_id)
+        const { userId } = req.params
+        if (!userId) {
+            res.status(400).json({ error: 'Se requiere el ID del usuario' });
+            return;
+        }
+        const response = await userService.getFlashCards(userId)
         console.log({success: response.success, message: response.message})
         const data = response.data;
         const flashcardData = {

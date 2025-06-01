@@ -7,7 +7,7 @@ const userRouter = Router()
 
 userRouter.post("/new", createUserController)
 userRouter.post("/flashcard/new", createFlashcardController)
-userRouter.get("/flashcard/getByID",getFlashcardController )
+userRouter.get("/flashcard/getByID/:userId",getFlashcardController )
 
 
 export default userRouter;
