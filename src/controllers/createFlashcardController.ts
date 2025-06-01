@@ -3,7 +3,6 @@ import { userService } from "../infrastructure/di/userContainer";
 
 export const createFlashcardController = async (req: Request, res: Response): Promise<void> => {
     try {
-
         const data = await userService.saveFlashcard(req.body)
         
         res.status(201).json(data)

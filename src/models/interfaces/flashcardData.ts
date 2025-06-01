@@ -1,5 +1,5 @@
 export interface flashcardData {
-  userID: string;
+  user_id: string;
   theme: string;
   question: string[];
   answer: string[];

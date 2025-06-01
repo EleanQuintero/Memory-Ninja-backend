@@ -2,7 +2,7 @@ import { pool } from "./mysql";
 import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { flashcardData } from "../../models/interfaces/flashcardData";
-import { QueryResult, ResultSetHeader, RowDataPacket } from 'mysql2';
+import {  ResultSetHeader, RowDataPacket } from 'mysql2';
 
 
 export class MySQLRepository implements IUserRepository {
@@ -21,7 +21,7 @@ export class MySQLRepository implements IUserRepository {
     }
 
     async saveFlashcard(data: flashcardData): Promise<{success: boolean, message: string}> {
-        const { userID, theme, question, answer} = data
+        const { user_id, theme, question, answer} = data
         const connection = await pool.getConnection();
 
         try {
@@ -46,7 +46,7 @@ export class MySQLRepository implements IUserRepository {
             // 2. Asociar tema al usuario si no existe
             await connection.execute(
               `INSERT IGNORE INTO user_themes (user_id, theme_id) VALUES (?, ?)`,
-              [userID, themeID],
+              [user_id, themeID],
             );
         
             for (let i = 0; i < question.length; i++) {
@@ -58,7 +58,7 @@ export class MySQLRepository implements IUserRepository {
                 // 3.1. Verificar si la pregunta ya existe para este usuario y tema
                 const [existingQuestion] = await connection.execute<RowDataPacket[]>(
                   'SELECT question_id FROM questions WHERE user_id = ? AND question = ? AND theme_id = ?',
-                  [userID, pregunta, themeID],
+                  [user_id, pregunta, themeID],
                 );
           
                 if (Array.isArray(existingQuestion) && existingQuestion.length > 0) {
@@ -68,7 +68,7 @@ export class MySQLRepository implements IUserRepository {
                   // 3.2. Si la pregunta no existe, insertarla
                   const [qRes] = await connection.execute<ResultSetHeader>(
                     'INSERT INTO questions (user_id, question, theme_id) VALUES (?, ?, ?)',
-                    [userID, pregunta, themeID],
+                    [user_id, pregunta, themeID],
                   );
                   questionID = qRes.insertId;
           
@@ -82,7 +82,7 @@ export class MySQLRepository implements IUserRepository {
                   // 5. Relacionar usuario con pregunta (esto puede necesitar ajuste si la pregunta ya existía)
                   await connection.execute(
                     `INSERT INTO users_questions (user_id, question_id) VALUES (?, ?)`,
-                    [userID, questionID],
+                    [user_id, questionID],
                   );
           
                   // 6. Insertar en flashcard_data (esto siempre creará una nueva entrada en flashcard_data por cada par pregunta-respuesta en el input, incluso si la pregunta ya existía. Si esto no es deseado, necesitarías una lógica de verificación/actualización aquí también)
@@ -90,7 +90,7 @@ export class MySQLRepository implements IUserRepository {
                     `INSERT INTO flashcard_data
                       (question, answer, user_id, theme_id, original_question_id, original_answer_id)
                      VALUES (?, ?, ?, ?, ?, ?)`,
-                    [pregunta, respuesta, userID, themeID, questionID, answerID],
+                    [pregunta, respuesta, user_id, themeID, questionID, answerID],
                   );
                 }
             }
