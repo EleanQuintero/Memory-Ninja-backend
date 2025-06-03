@@ -6,6 +6,7 @@ export const createFlashcardController = async (req: Request, res: Response): Pr
         const data = await userService.saveFlashcard(req.body)
         
         res.status(201).json(data)
+        console.log("flashcard creada")
     } catch (error: unknown) {
         if (error instanceof Error) {
             res.status(500).json({error: error.message})
