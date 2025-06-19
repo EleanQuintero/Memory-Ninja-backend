@@ -23,7 +23,7 @@ export class GeminiModel implements IAInterface {
   }
 
   async generateAnswer(tema: string, pregunta: string[]): Promise<string> {
-    const prompt = `Eres un experto en ${tema}. Responde con precisión, claridad y brevedad a la siguiente pregunta: ${pregunta}. Explica con un lenguaje directo y fácil de entender. La respuesta debe ser concisa y de longitud corta.`;
+    const prompt = `Eres un experto en ${tema}. Responde con precisión, claridad y brevedad a la siguiente pregunta: ${pregunta}. Explica con un lenguaje directo y fácil de entender. Es muy importante que la respuesta no sea de mas de 256 caracteres.`;
     const contents = [
       {
         role: "user",

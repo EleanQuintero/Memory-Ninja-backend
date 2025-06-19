@@ -112,7 +112,8 @@ export class MySQLRepository implements IUserRepository {
 
     async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: RowDataPacket[]; }> {
         try {
-          console.log(user_id)
+          const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          console.log(`Hora de ejecucion: ${hour}`);
           const [result] = await pool.query(
             `SELECT fd.question,  fd.answer, t.theme_name AS theme
               FROM flashcard_data fd 
