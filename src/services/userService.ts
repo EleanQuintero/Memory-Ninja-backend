@@ -1,7 +1,7 @@
 import { UserData } from "../entities/users/userModel";
 import { MySQLRepository } from "../infrastructure/db/MySQLRepository";
 import { flashcardData } from "../models/interfaces/flashcardData";
-import { flashcard } from "../entities/flashcard/flashCardModel";
+import { flashcard, flashcardToSync } from "../entities/flashcard/flashCardModel";
 
 export class UserService {
     constructor(private userRepo: MySQLRepository) {}
@@ -10,7 +10,7 @@ export class UserService {
         return this.userRepo.saveUser(data)
     }
 
-    async saveFlashcard(data: flashcardData): Promise<{success: boolean, message: string}> {
+    async saveFlashcard(data: flashcardToSync): Promise<{success: boolean, message: string}> {
         return this.userRepo.saveFlashcard(data)
     }
 

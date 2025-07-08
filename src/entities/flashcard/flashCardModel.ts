@@ -1,8 +1,14 @@
 interface flashcard{
-    flashcard_id: string;
+    flashcard_id?: string;
     question: string;
     answer: string;
     theme: string;
 }
 
-export type {flashcard}
+interface flashcardToSync {
+    user_id: string 
+    flashcard: flashcard[]
+  }
+
+
+export type {flashcard, flashcardToSync}
