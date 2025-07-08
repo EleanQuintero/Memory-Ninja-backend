@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { userService } from "../infrastructure/di/userContainer";
 
+
+
+
 export const getFlashcardController = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userId } = req.params
@@ -10,14 +13,13 @@ export const getFlashcardController = async (req: Request, res: Response): Promi
         }
         const response = await userService.getFlashCards(userId)
         console.log({success: response.success, message: response.message})
-        const data = response.data;
-        const flashcardData = {
-            theme: data.map(flashcard => flashcard.theme),
-            questions: data.map(flashcard => flashcard.question),
-            answer: data.map(flashcard => flashcard.answer),
-
-        }
-
+        const data = response.data;  
+        const flashcardData = data.map((flashcard) => ({
+            flashcard_id: flashcard.flashcard_id.slice(0, 8),
+            question: flashcard.question,
+            answer: flashcard.answer,
+            theme: flashcard.theme,
+        }));
         res.status(201).json(flashcardData)
     } catch (error: unknown) {
         if (error instanceof Error) {

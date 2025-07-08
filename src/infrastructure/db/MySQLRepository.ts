@@ -3,6 +3,7 @@ import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { flashcardData } from "../../models/interfaces/flashcardData";
 import {  ResultSetHeader, RowDataPacket } from 'mysql2';
+import { flashcard } from "../../entities/flashcard/flashCardModel";
 
 
 export class MySQLRepository implements IUserRepository {
@@ -110,18 +111,21 @@ export class MySQLRepository implements IUserRepository {
     }
 
 
-    async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: RowDataPacket[]; }> {
+    async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
         try {
           const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
           console.log(`Hora de ejecucion: ${hour}`);
-          const [result] = await pool.query(
-            `SELECT fd.question,  fd.answer, t.theme_name AS theme
+          const [result] = await pool.query<RowDataPacket[]>(
+            `SELECT fd.flashcard_id AS flashcard_id, fd.question,  fd.answer, t.theme_name AS theme
               FROM flashcard_data fd 
               JOIN themes t ON fd.theme_id = t.theme_id
               WHERE fd.user_id = ?`,
               [user_id],
             )
-            return {success: true, message:"Datos obtenidos de forma exitosa", data: result as RowDataPacket[]}
+            
+            const flashcards = result as flashcard[]
+
+            return {success: true, message:"Datos obtenidos de forma exitosa", data: flashcards }
           } catch (error) {
             console.error(error instanceof Error ? error.message : 'Error desconocido' )
             throw new Error(`Error al obtener los datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
