@@ -15,7 +15,7 @@ export const getFlashcardController = async (req: Request, res: Response): Promi
         console.log({success: response.success, message: response.message})
         const data = response.data;  
         const flashcardData = data.map((flashcard) => ({
-            flashcard_id: flashcard.flashcard_id.slice(0, 8),
+            flashcard_id: flashcard.flashcard_id?.slice(0, 8),
             question: flashcard.question,
             answer: flashcard.answer,
             theme: flashcard.theme,

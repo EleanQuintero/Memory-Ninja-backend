@@ -3,7 +3,7 @@ import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { flashcardData } from "../../models/interfaces/flashcardData";
 import {  ResultSetHeader, RowDataPacket } from 'mysql2';
-import { flashcard } from "../../entities/flashcard/flashCardModel";
+import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 
 
 export class MySQLRepository implements IUserRepository {
@@ -21,81 +21,80 @@ export class MySQLRepository implements IUserRepository {
         }
     }
 
-    async saveFlashcard(data: flashcardData): Promise<{success: boolean, message: string}> {
-        const { user_id, theme, question, answer} = data
+    async saveFlashcard(data: flashcardToSync ): Promise<{success: boolean, message: string}> {
+        const { user_id, flashcard } = data;
         const connection = await pool.getConnection();
 
         try {
             await connection.beginTransaction();
-        
-            // 1. Insertar tema si no existe
-            const [existingTheme] = await connection.execute<RowDataPacket[]>(
-              'SELECT theme_id FROM themes WHERE theme_name = ?',
-              [theme],
-            );
-            let themeID;
-            if (Array.isArray(existingTheme) && existingTheme.length === 0) {
-              const [themeResult] = await connection.execute<ResultSetHeader>(
-                'INSERT INTO themes (theme_name) VALUES (?)',
-                [theme],
-              );
-              themeID = themeResult.insertId;
-            } else {
-              themeID = existingTheme[0].theme_id;
-            }
-        
-            // 2. Asociar tema al usuario si no existe
-            await connection.execute(
-              `INSERT IGNORE INTO user_themes (user_id, theme_id) VALUES (?, ?)`,
-              [user_id, themeID],
-            );
-        
-            for (let i = 0; i < question.length; i++) {
-                const pregunta = question[i];
-                const respuesta = answer[i];
-          
+
+            for (const card of flashcard) {
+                const { question, answer, theme } = card;
+
+                // 1. Insertar tema si no existe
+                const [existingTheme] = await connection.execute<RowDataPacket[]>(
+                    'SELECT theme_id FROM themes WHERE theme_name = ?',
+                    [theme],
+                );
+                let themeID;
+                if (Array.isArray(existingTheme) && existingTheme.length === 0) {
+                    const [themeResult] = await connection.execute<ResultSetHeader>(
+                        'INSERT INTO themes (theme_name) VALUES (?)',
+                        [theme],
+                    );
+                    themeID = themeResult.insertId;
+                } else {
+                    themeID = existingTheme[0].theme_id;
+                }
+
+                // 2. Asociar tema al usuario si no existe
+                await connection.execute(
+                    `INSERT IGNORE INTO user_themes (user_id, theme_id) VALUES (?, ?)`,
+                    [user_id, themeID],
+                );
+
                 let questionID;
-          
+
                 // 3.1. Verificar si la pregunta ya existe para este usuario y tema
                 const [existingQuestion] = await connection.execute<RowDataPacket[]>(
-                  'SELECT question_id FROM questions WHERE user_id = ? AND question = ? AND theme_id = ?',
-                  [user_id, pregunta, themeID],
+                    'SELECT question_id FROM questions WHERE user_id = ? AND question = ? AND theme_id = ?',
+                    [user_id, question, themeID],
                 );
-          
+
                 if (Array.isArray(existingQuestion) && existingQuestion.length > 0) {
-                  // Si la pregunta existe, usar su ID
-                  questionID = existingQuestion[0].question_id;
+                    // Si la pregunta existe, usar su ID
+                    questionID = existingQuestion[0].question_id;
                 } else {
-                  // 3.2. Si la pregunta no existe, insertarla
-                  const [qRes] = await connection.execute<ResultSetHeader>(
-                    'INSERT INTO questions (user_id, question, theme_id) VALUES (?, ?, ?)',
-                    [user_id, pregunta, themeID],
-                  );
-                  questionID = qRes.insertId;
-          
-                  // Y ahora insertamos la respuesta solo si la pregunta es nueva.
-                  const [aRes] = await connection.execute<ResultSetHeader>(
-                    'INSERT INTO answers (question_id, answer_text) VALUES (?, ?)',
-                    [questionID, respuesta],
-                  );
-                  const answerID = aRes.insertId;
-          
-                  // 5. Relacionar usuario con pregunta (esto puede necesitar ajuste si la pregunta ya existía)
-                  await connection.execute(
-                    `INSERT INTO users_questions (user_id, question_id) VALUES (?, ?)`,
-                    [user_id, questionID],
-                  );
-          
-                  // 6. Insertar en flashcard_data (esto siempre creará una nueva entrada en flashcard_data por cada par pregunta-respuesta en el input, incluso si la pregunta ya existía. Si esto no es deseado, necesitarías una lógica de verificación/actualización aquí también)
-                  await connection.execute(
-                    `INSERT INTO flashcard_data
-                      (question, answer, user_id, theme_id, original_question_id, original_answer_id)
-                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    [pregunta, respuesta, user_id, themeID, questionID, answerID],
-                  );
+                    // 3.2. Si la pregunta no existe, insertarla
+                    const [qRes] = await connection.execute<ResultSetHeader>(
+                        'INSERT INTO questions (user_id, question, theme_id) VALUES (?, ?, ?)',
+                        [user_id, question, themeID],
+                    );
+                    questionID = qRes.insertId;
+
+                    // Insertar la respuesta solo si la pregunta es nueva.
+                    const [aRes] = await connection.execute<ResultSetHeader>(
+                        'INSERT INTO answers (question_id, answer_text) VALUES (?, ?)',
+                        [questionID, answer],
+                    );
+                    const answerID = aRes.insertId;
+
+                    // Relacionar usuario con pregunta
+                    await connection.execute(
+                        `INSERT INTO users_questions (user_id, question_id) VALUES (?, ?)`,
+                        [user_id, questionID],
+                    );
+
+                    // Insertar en flashcard_data
+                    await connection.execute(
+                        `INSERT INTO flashcard_data
+                            (question, answer, user_id, theme_id, original_question_id, original_answer_id)
+                        VALUES (?, ?, ?, ?, ?, ?)`,
+                        [question, answer, user_id, themeID, questionID, answerID],
+                    );
                 }
             }
-          
+
             await connection.commit();
             return { success: true, message: 'Flashcards insertadas correctamente.' };
         } catch (error: unknown) {
