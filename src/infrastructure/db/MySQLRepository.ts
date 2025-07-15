@@ -1,7 +1,6 @@
 import { pool } from "./mysql";
 import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
-import { flashcardData } from "../../models/interfaces/flashcardData";
 import {  ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 
