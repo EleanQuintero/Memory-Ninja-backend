@@ -17,4 +17,9 @@ export class UserService {
     async getFlashCards(userID: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
         return this.userRepo.getFlashcardsByID(userID)
     }
+
+    async deleteFlashcard(flashcard_id: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        return this.userRepo.deleteFlashcard(flashcard_id, user_id)
+    }
+
 }

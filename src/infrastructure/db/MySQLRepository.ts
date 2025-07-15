@@ -1,26 +1,26 @@
 import { pool } from "./mysql";
 import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
-import {  ResultSetHeader, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 
 
 export class MySQLRepository implements IUserRepository {
-    async saveUser(user: UserData): Promise<{message: string}> {
+    async saveUser(user: UserData): Promise<{ message: string }> {
         try {
             const [result] = await pool.query(
                 'INSERT INTO users (id, name, lastName, email, role) VALUES (?, ?, ?, ?, ?)',
-            [user.id, user.name, user.lastName, user.email, user.role],
-        ) 
-        console.log({"Resultado": result})
-        return {message: "Usuario registrado exitosamente"}
+                [user.id, user.name, user.lastName, user.email, user.role],
+            )
+            console.log({ "Resultado": result })
+            return { message: "Usuario registrado exitosamente" }
         } catch (error: unknown) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido' )
+            console.error(error instanceof Error ? error.message : 'Error desconocido')
             throw new Error(`Error al crear usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
     }
 
-    async saveFlashcard(data: flashcardToSync ): Promise<{success: boolean, message: string}> {
+    async saveFlashcard(data: flashcardToSync): Promise<{ success: boolean, message: string }> {
         const { user_id, flashcard } = data;
         const connection = await pool.getConnection();
 
@@ -99,8 +99,8 @@ export class MySQLRepository implements IUserRepository {
         } catch (error: unknown) {
             await connection.rollback();
             console.error('Error insertando flashcards:', error);
-            return { 
-                success: false, 
+            return {
+                success: false,
                 message: `Error insertando flashcards: ${error instanceof Error ? error.message : 'Error desconocido'}`,
             };
         } finally {
@@ -111,23 +111,51 @@ export class MySQLRepository implements IUserRepository {
 
     async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
         try {
-          const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-          console.log(`Hora de ejecucion: ${hour}`);
-          const [result] = await pool.query<RowDataPacket[]>(
-            `SELECT fd.flashcard_id AS flashcard_id, fd.question,  fd.answer, t.theme_name AS theme
+            const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            console.log(`Hora de ejecucion: ${hour}`);
+            const [result] = await pool.query<RowDataPacket[]>(
+                `SELECT fd.flashcard_id AS flashcard_id, fd.question,  fd.answer, t.theme_name AS theme
               FROM flashcard_data fd 
               JOIN themes t ON fd.theme_id = t.theme_id
               WHERE fd.user_id = ?`,
-              [user_id],
+                [user_id],
             )
-            
+
             const flashcards = result as flashcard[]
 
-            return {success: true, message:"Datos obtenidos de forma exitosa", data: flashcards }
-          } catch (error) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido' )
+            return { success: true, message: "Datos obtenidos de forma exitosa", data: flashcards }
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido')
             throw new Error(`Error al obtener los datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
-          
+
         }
     }
+
+    async deleteFlashcard(flashcard_id: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(
+                `SELECT flashcard_id 
+                FROM flashcard_data
+                WHERE user_id = ? AND flashcard_id LIKE ?;`, 
+                [user_id,`${flashcard_id}%`],
+            )
+            const idToDelete = result[0].flashcard_id
+
+            const [finalResult] = await pool.query<RowDataPacket[]>(
+                `DELETE from flashcard_data
+                WHERE user_id = ? AND flashcard_id = ?;`,
+                [user_id, idToDelete],
+            )
+            return {
+                success: true,
+                message: "Flashcard eliminada correctamente",    
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: "Error al eliminar la flashcard",
+        }
+
+    }
+}
 }
