@@ -3,9 +3,10 @@ import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
+import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
 
 
-export class MySQLRepository implements IUserRepository {
+export class MySQLRepository implements IUserRepository, IDashboardRepository {
     async saveUser(user: UserData): Promise<{ message: string }> {
         try {
             const [result] = await pool.query(
@@ -87,7 +88,7 @@ export class MySQLRepository implements IUserRepository {
                     // Insertar en flashcard_data
                     await connection.execute(
                         `INSERT INTO flashcard_data
-                            (question, answer, user_id, theme_id, original_question_id, original_answer_id)
+                        (question, answer, user_id, theme_id, original_question_id, original_answer_id)
                         VALUES (?, ?, ?, ?, ?, ?)`,
                         [question, answer, user_id, themeID, questionID, answerID],
                     );
@@ -136,8 +137,8 @@ export class MySQLRepository implements IUserRepository {
             const [result] = await pool.query<RowDataPacket[]>(
                 `SELECT flashcard_id 
                 FROM flashcard_data
-                WHERE user_id = ? AND flashcard_id LIKE ?;`, 
-                [user_id,`${flashcard_id}%`],
+                WHERE user_id = ? AND flashcard_id LIKE ?;`,
+                [user_id, `${flashcard_id}%`],
             )
             const idToDelete = result[0].flashcard_id
 
@@ -148,14 +149,27 @@ export class MySQLRepository implements IUserRepository {
             )
             return {
                 success: true,
-                message: "Flashcard eliminada correctamente",    
+                message: "Flashcard eliminada correctamente",
             }
         } catch (error) {
             return {
                 success: false,
                 message: "Error al eliminar la flashcard",
-        }
+            }
 
+        }
     }
-}
+
+    getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
+        throw new Error("Method not implemented.");
+    }
+    getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
+        throw new Error("Method not implemented.");
+    }
+    getMaxFlashcardsByUser(user_id: string): Promise<{ success: boolean; message: string; count: number; }> {
+        throw new Error("Method not implemented.");
+    }
+    getThemeWithMaxFlashcards(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }; }> {
+        throw new Error("Method not implemented.");
+    }
 }
