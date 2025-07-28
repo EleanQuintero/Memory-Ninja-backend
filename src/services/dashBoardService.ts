@@ -7,7 +7,7 @@ export class DashboardService {
         return await this.dashboardRepository.getCountFlashcardsByTheme(user_id)
     }
 
-    async getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean, message: string, data: flashcard[] }> {
+    async getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean, message: string, data: { question: string, theme: string, createdAt: string }[] }> {
         return await this.dashboardRepository.getLastestFlashcardsCreated(user_id)
     }
 

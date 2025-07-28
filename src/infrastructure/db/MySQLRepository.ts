@@ -160,16 +160,131 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
         }
     }
 
-    getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
-        throw new Error("Method not implemented.");
+    async getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT t.theme_name,                   
+                COUNT(f.flashcard_id) AS flashcard_count 
+                FROM flashcard_data f         
+                JOIN themes t ON f.theme_id = t.theme_id 
+                WHERE f.user_id = ?   
+                GROUP BY f.user_id, t.theme_id 
+                ORDER BY flashcard_count DESC;
+                `, [user_id],
+            )
+
+            const data = result.map(row => ({
+                theme: row.theme_name as string,
+                count: row.flashcard_count as number,
+            }))
+
+            return { success: true, message: "datos obtenidos exitosamente", data: data }
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido')
+            return {
+                success: false,
+                message: `Error al obtener el conteo de flashcards por tema`,
+                data: [],
+            }
+        }
     }
-    getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
-        throw new Error("Method not implemented.");
+
+    async getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean; message: string; data: { question: string, theme: string, createdAt: string }[]; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT f.question, t.theme_name, f.created_at 
+                FROM flashcard_data f
+                JOIN themes t ON f.theme_id = t.theme_id 
+                JOIN users u ON f.user_id = u.id        
+                WHERE u.id = ?
+                ORDER BY f.created_at DESC
+                LIMIT 4;
+                `, [user_id])
+
+            const data = result.map(row => ({
+                question: row.question as string,
+                theme: row.theme_name as string,
+                createdAt: row.created_at as string,
+            }))
+
+            return {
+                success: true,
+                message: "datos obtenidos de forma exitosa",
+                data: data,
+            }
+
+        } catch (error) {
+            console.error(error)
+            return {
+                success: false,
+                message: "Error al obtener los datos",
+                data: [],
+            }
+
+        }
     }
-    getMaxFlashcardsByUser(user_id: string): Promise<{ success: boolean; message: string; count: number; }> {
-        throw new Error("Method not implemented.");
+
+    async getMaxFlashcardsByUser(user_id: string): Promise<{ success: boolean; message: string; count: number; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT f.user_id,
+                COUNT(f.flashcard_id) AS flashcard_count 
+                FROM flashcard_data f   
+                WHERE f.user_id = ?   
+                GROUP BY f.user_id;
+                `, [user_id])
+
+            const data = result.map(row => ({
+                count: row.flashcard_count as number,
+            }))
+
+            return { success: true, message: "datos obtenidos de forma exitosa", count: data[0].count }
+        } catch (error) {
+            console.error(error)
+            return {
+                success: false,
+                message: "Error al obtener los datos",
+                count: 0,
+            }
+        }
     }
-    getThemeWithMaxFlashcards(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }; }> {
-        throw new Error("Method not implemented.");
+
+    async getThemeWithMaxFlashcards(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT t.theme_name,                   
+                COUNT(f.flashcard_id) AS flashcard_count 
+                FROM flashcard_data f   
+                JOIN themes t ON f.theme_id = t.theme_id 
+                WHERE f.user_id = ?
+                GROUP BY t.theme_id 
+                order by flashcard_count desc
+                LIMIT 1;
+                `, [user_id])
+
+            const data = result.map(row => ({
+                theme: row.theme_name as string,
+                count: row.flashcard_count as number,
+            }))
+
+            return {
+                success: true,
+                message: "Datos obtenidos de forma exitosa",
+                data: data[0],
+            }
+
+        } catch (error) {
+
+            console.error(error)
+            return {
+                success: false,
+                message: "Error al obtener los datos",
+                data: {
+                    theme: "",
+                    count: 0,
+                },
+            }
+
+        }
     }
 }
