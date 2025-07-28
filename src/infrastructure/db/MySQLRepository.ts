@@ -109,7 +109,6 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
         }
     }
 
-
     async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
         try {
             const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
