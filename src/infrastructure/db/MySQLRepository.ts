@@ -3,9 +3,10 @@ import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
+import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
 
 
-export class MySQLRepository implements IUserRepository {
+export class MySQLRepository implements IUserRepository, IDashboardRepository {
     async saveUser(user: UserData): Promise<{ message: string }> {
         try {
             const [result] = await pool.query(
@@ -87,7 +88,7 @@ export class MySQLRepository implements IUserRepository {
                     // Insertar en flashcard_data
                     await connection.execute(
                         `INSERT INTO flashcard_data
-                            (question, answer, user_id, theme_id, original_question_id, original_answer_id)
+                        (question, answer, user_id, theme_id, original_question_id, original_answer_id)
                         VALUES (?, ?, ?, ?, ?, ?)`,
                         [question, answer, user_id, themeID, questionID, answerID],
                     );
@@ -107,7 +108,6 @@ export class MySQLRepository implements IUserRepository {
             connection.release();
         }
     }
-
 
     async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
         try {
@@ -136,8 +136,8 @@ export class MySQLRepository implements IUserRepository {
             const [result] = await pool.query<RowDataPacket[]>(
                 `SELECT flashcard_id 
                 FROM flashcard_data
-                WHERE user_id = ? AND flashcard_id LIKE ?;`, 
-                [user_id,`${flashcard_id}%`],
+                WHERE user_id = ? AND flashcard_id LIKE ?;`,
+                [user_id, `${flashcard_id}%`],
             )
             const idToDelete = result[0].flashcard_id
 
@@ -148,14 +148,142 @@ export class MySQLRepository implements IUserRepository {
             )
             return {
                 success: true,
-                message: "Flashcard eliminada correctamente",    
+                message: "Flashcard eliminada correctamente",
             }
         } catch (error) {
             return {
                 success: false,
                 message: "Error al eliminar la flashcard",
-        }
+            }
 
+        }
     }
-}
+
+    async getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT t.theme_name,                   
+                COUNT(f.flashcard_id) AS flashcard_count 
+                FROM flashcard_data f         
+                JOIN themes t ON f.theme_id = t.theme_id 
+                WHERE f.user_id = ?   
+                GROUP BY f.user_id, t.theme_id 
+                ORDER BY flashcard_count DESC;
+                `, [user_id],
+            )
+
+            const data = result.map(row => ({
+                theme: row.theme_name as string,
+                count: row.flashcard_count as number,
+            }))
+
+            return { success: true, message: "datos obtenidos exitosamente", data: data }
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido')
+            return {
+                success: false,
+                message: `Error al obtener el conteo de flashcards por tema`,
+                data: [],
+            }
+        }
+    }
+
+    async getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean; message: string; data: { question: string, theme: string, createdAt: string }[]; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT f.question, t.theme_name, f.created_at 
+                FROM flashcard_data f
+                JOIN themes t ON f.theme_id = t.theme_id 
+                JOIN users u ON f.user_id = u.id        
+                WHERE u.id = ?
+                ORDER BY f.created_at DESC
+                LIMIT 4;
+                `, [user_id])
+
+            const data = result.map(row => ({
+                question: row.question as string,
+                theme: row.theme_name as string,
+                createdAt: row.created_at as string,
+            }))
+
+            return {
+                success: true,
+                message: "datos obtenidos de forma exitosa",
+                data: data,
+            }
+
+        } catch (error) {
+            console.error(error)
+            return {
+                success: false,
+                message: "Error al obtener los datos",
+                data: [],
+            }
+
+        }
+    }
+
+    async getMaxFlashcardsByUser(user_id: string): Promise<{ success: boolean; message: string; count: number; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT f.user_id,
+                COUNT(f.flashcard_id) AS flashcard_count 
+                FROM flashcard_data f   
+                WHERE f.user_id = ?   
+                GROUP BY f.user_id;
+                `, [user_id])
+
+            const data = result.map(row => ({
+                count: row.flashcard_count as number,
+            }))
+
+            return { success: true, message: "datos obtenidos de forma exitosa", count: data[0].count }
+        } catch (error) {
+            console.error(error)
+            return {
+                success: false,
+                message: "Error al obtener los datos",
+                count: 0,
+            }
+        }
+    }
+
+    async getThemeWithMaxFlashcards(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }; }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT t.theme_name,                   
+                COUNT(f.flashcard_id) AS flashcard_count 
+                FROM flashcard_data f   
+                JOIN themes t ON f.theme_id = t.theme_id 
+                WHERE f.user_id = ?
+                GROUP BY t.theme_id 
+                order by flashcard_count desc
+                LIMIT 1;
+                `, [user_id])
+
+            const data = result.map(row => ({
+                theme: row.theme_name as string,
+                count: row.flashcard_count as number,
+            }))
+
+            return {
+                success: true,
+                message: "Datos obtenidos de forma exitosa",
+                data: data[0],
+            }
+
+        } catch (error) {
+
+            console.error(error)
+            return {
+                success: false,
+                message: "Error al obtener los datos",
+                data: {
+                    theme: "",
+                    count: 0,
+                },
+            }
+
+        }
+    }
 }
