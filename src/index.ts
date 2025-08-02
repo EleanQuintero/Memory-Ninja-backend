@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express'
+import dotenv from 'dotenv'
 import appRouter from './routes/app'
 import userRouter from './routes/userRouter'
 import healthRouter from './routes/health'
@@ -8,6 +9,7 @@ import dashboardRouter from './routes/dashboardRouter'
 
 const PORT: number | string = process.env.PORT ?? 4444
 const app = express()
+dotenv.config()
 
 //todo: valorar agregar validaciones por API KEY 
 
