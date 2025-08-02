@@ -6,6 +6,8 @@ import { getThemeWithMaxFlashcards } from "../controllers/dashboardData/getTheme
 
 const dashboardRouter = Router()
 
+//todo: agregar validaciones de ID a los endpoints que lo requieran
+
 dashboardRouter.get("/countByTheme/:userId", getCountFlashcardsByTheme)
 dashboardRouter.get("/latestFlashcards/:userId", getLastestFlashcardsCreated)
 dashboardRouter.get("/maxFlashcards/:userId", getMaxFlashcardsByUser)
