@@ -1,5 +1,4 @@
 import { Request, Response } from "express"
-import { verifyToken } from '@clerk/backend';
 import { dashboardService } from "../../infrastructure/di/dashboardContainer"
 import { VerifiedToken } from "../../models/interfaces/auth";
 
