@@ -8,6 +8,7 @@ import { limiter } from './services/rateLimiter'
 import dashboardRouter from './routes/dashboardRouter'
 import { validateAuth } from './middlewares/validateAuth'
 
+dotenv.config()
 const PORT: number | string = process.env.PORT ?? 4444
 const app = express()
 app.use(express.json())

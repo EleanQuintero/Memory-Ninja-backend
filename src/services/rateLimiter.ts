@@ -17,7 +17,7 @@ export const limiter = ({ minuteDuration, maxRequest }: limiter): RateLimitReque
             return maxRequest;
         },
         keyGenerator: (req: Request) => {
-            const userId = req.user?.id || req.ip
+            const userId = req.user?.id
             return `${userId}/LEVEL:${req.user?.userLevel}/PATH:${req.path}`
         },
         message: "Too many request. Please try again later",
