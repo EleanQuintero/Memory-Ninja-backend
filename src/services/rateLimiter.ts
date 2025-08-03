@@ -7,9 +7,6 @@ interface limiter {
     maxRequest: number
 }
 
-
-
-
 export const limiter = ({ minuteDuration, maxRequest }: limiter): RateLimitRequestHandler => {
     return rateLimit({
         windowMs: minuteDuration * 60 * 1000,
@@ -27,7 +24,4 @@ export const limiter = ({ minuteDuration, maxRequest }: limiter): RateLimitReque
         standardHeaders: true,
         legacyHeaders: false,
     })
-
-
-
 }
