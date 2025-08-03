@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
 import { dashboardService } from "../../infrastructure/di/dashboardContainer"
-import { VerifiedToken } from "../../models/interfaces/auth";
 
 
 
