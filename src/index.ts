@@ -12,7 +12,6 @@ const PORT: number | string = process.env.PORT ?? 4444
 const app = express()
 dotenv.config()
 
-//todo: valorar agregar validaciones por API KEY 
 
 app.use(express.json())
 app.use(helmet())
@@ -21,10 +20,6 @@ app.use('/api/questions', validateAuth, limiter({ minuteDuration: 1, maxRequest:
 app.use('/api/user', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), userRouter)
 app.use('/api/health', validateAuth, limiter({ minuteDuration: 1, maxRequest: 3 }), healthRouter)
 app.use('/api/dashboard', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), dashboardRouter)
-
-app.get('/', (req: Request, res: Response): void => {
-    res.json({ mensaje: "Bienvenido al punto de entrada de la API" })
-})
 
 app.listen(PORT, () => {
     console.log(`Server running on PORT: ${PORT}`)
