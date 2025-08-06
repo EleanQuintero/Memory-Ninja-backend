@@ -10,6 +10,7 @@ import { validateAuth } from './middlewares/validateAuth'
 
 const PORT: number | string = process.env.PORT ?? 4444
 const app = express()
+dotenv.config()
 app.use(express.json())
 app.use(helmet())
 app.disable('x-powered-by')
