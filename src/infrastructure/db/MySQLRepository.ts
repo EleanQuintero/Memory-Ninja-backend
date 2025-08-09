@@ -4,9 +4,13 @@ import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
+import { IThemeRepository } from "../../models/interfaces/ThemeRepository";
 
 
-export class MySQLRepository implements IUserRepository, IDashboardRepository {
+export class MySQLRepository implements IUserRepository, IDashboardRepository, IThemeRepository {
+
+    /*User Data*/
+
     async saveUser(user: UserData): Promise<{ message: string }> {
         try {
             const [result] = await pool.query(
@@ -20,6 +24,8 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
             throw new Error(`Error al crear usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
     }
+
+    /*Flashcard Data*/
 
     async saveFlashcard(data: flashcardToSync): Promise<{ success: boolean, message: string }> {
         const { user_id, flashcard } = data;
@@ -159,6 +165,8 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
         }
     }
 
+    /*Dashboard Data*/
+
     async getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
         try {
             const [result] = await pool.query<RowDataPacket[]>(`
@@ -286,4 +294,24 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
 
         }
     }
+
+
+    /*Theme Data*/
+
+    createTheme(name: string): Promise<{ success: boolean; message: string; data: { id: string; name: string; }; }> {
+
+
+    }
+
+
+    getAllThemes(): Promise<{ success: boolean; message: string; data: string[]; }> {
+
+    }
+
+
+    deleteTheme(themeId: string): Promise<{ success: boolean; message: string; }> {
+
+    }
+
+
 }
