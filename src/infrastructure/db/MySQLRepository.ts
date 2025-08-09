@@ -349,7 +349,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             return { success: true, message: "Datos obtenidos de forma exitosa", themeDTO: data };
         } catch (error) {
             console.error(error instanceof Error ? error.message : 'Error desconocido');
-            return { success: false, message: `Error al obtener los temas: ${error instanceof Error ? error.message : 'Error desconocido'}`, themeDTO: [] };
+            return { success: false, message: `Error al obtener los temas`, themeDTO: [] };
         }
     }
 
