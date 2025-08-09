@@ -4,7 +4,7 @@ import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
-import { IThemeRepository } from "../../models/interfaces/ThemeRepository";
+import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository";
 
 
 export class MySQLRepository implements IUserRepository, IDashboardRepository, IThemeRepository {
@@ -307,13 +307,12 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 `INSERT INTO themes (theme_name)
                 VALUES (?)
                 ON DUPLICATE KEY UPDATE theme_id = LAST_INSERT_ID(theme_id);` ,
-                [theme_name]
+                [theme_name],
             );
-
             await connection.execute(`
                 INSERT INTO user_themes (user_id, theme_id)
                 VALUES (?, LAST_INSERT_ID())`,
-                [user_id]
+                [user_id],
             );
 
             await connection.commit();
@@ -326,17 +325,53 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         } finally {
             connection.release();
         }
-
-
-
-        getAllThemes(): Promise < { success: boolean; message: string; data: string[]; } > {
-
-        }
-
-
-        deleteTheme(themeId: string): Promise < { success: boolean; message: string; } > {
-
-        }
-
-
     }
+
+    async getAllThemes(user_id: string): Promise<{ success: boolean; message: string; themeDTO: themeData[] }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(
+                `SELECT 
+                    t.theme_id,t.theme_name
+                FROM users u
+                JOIN user_themes ut 
+                    ON u.id = ut.user_id
+                JOIN themes t 
+                    ON ut.theme_id = t.theme_id
+                WHERE u.id = ?;`,
+                [user_id],
+            );
+
+            const data: themeData[] = result.map(row => ({
+                themeId: row.theme_id as string,
+                themeName: row.theme_name as string,
+            }));
+
+            return { success: true, message: "Datos obtenidos de forma exitosa", themeDTO: data };
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return { success: false, message: `Error al obtener los temas: ${error instanceof Error ? error.message : 'Error desconocido'}`, themeDTO: [] };
+        }
+    }
+
+
+    async deleteTheme(themeId: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        try {
+            await pool.query(
+                `DELETE 
+                FROM user_themes 
+                WHERE user_id = ? AND theme_id = ?;`,
+                [user_id, themeId],
+            );
+
+            return { success: true, message: "Tema eliminado exitosamente" };
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return {
+                success: false,
+                message: `Error al eliminar el tema: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+            }
+        }
+    }
+
+
+}
