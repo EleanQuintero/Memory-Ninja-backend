@@ -1,5 +1,5 @@
 export interface IThemeRepository {
     getAllThemes(): Promise<{ success: boolean, message: string, data: string[] }>;
-    createTheme(name: string): Promise<{ success: boolean, message: string, data: { id: string, name: string } }>;
+    createTheme(user_id: string, theme_name: string): Promise<{ success: boolean, message: string }>;
     deleteTheme(themeId: string): Promise<{ success: boolean, message: string }>;
 }

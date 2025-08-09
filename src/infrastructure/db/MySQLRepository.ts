@@ -298,20 +298,45 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
     /*Theme Data*/
 
-    createTheme(name: string): Promise<{ success: boolean; message: string; data: { id: string; name: string; }; }> {
+    async createTheme(user_id: string, theme_name: string): Promise<{ success: boolean; message: string }> {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            await connection.execute(
+                `INSERT INTO themes (theme_name)
+                VALUES (?)
+                ON DUPLICATE KEY UPDATE theme_id = LAST_INSERT_ID(theme_id);` ,
+                [theme_name]
+            );
+
+            await connection.execute(`
+                INSERT INTO user_themes (user_id, theme_id)
+                VALUES (?, LAST_INSERT_ID())`,
+                [user_id]
+            );
+
+            await connection.commit();
+            return { success: true, message: "Tema creado exitosamente" };
+        }
+        catch (error: unknown) {
+            await connection.rollback();
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return { success: false, message: `Error al crear el tema: ${error instanceof Error ? error.message : 'Error desconocido'}` };
+        } finally {
+            connection.release();
+        }
+
+
+
+        getAllThemes(): Promise < { success: boolean; message: string; data: string[]; } > {
+
+        }
+
+
+        deleteTheme(themeId: string): Promise < { success: boolean; message: string; } > {
+
+        }
 
 
     }
-
-
-    getAllThemes(): Promise<{ success: boolean; message: string; data: string[]; }> {
-
-    }
-
-
-    deleteTheme(themeId: string): Promise<{ success: boolean; message: string; }> {
-
-    }
-
-
-}
