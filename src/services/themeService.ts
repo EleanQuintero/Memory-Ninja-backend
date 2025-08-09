@@ -11,5 +11,9 @@ export class ThemeService {
         return await this.themeRepository.deleteTheme(theme_id, user_id);
     }
 
+    async createTheme(user_id: string, theme_name: string): Promise<{ success: boolean, message: string }> {
+        return await this.themeRepository.createTheme(user_id, theme_name);
+    }
+
 
 }

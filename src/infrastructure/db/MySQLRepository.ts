@@ -321,7 +321,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         catch (error: unknown) {
             await connection.rollback();
             console.error(error instanceof Error ? error.message : 'Error desconocido');
-            return { success: false, message: `Error al crear el tema: ${error instanceof Error ? error.message : 'Error desconocido'}` };
+            return { success: false, message: `Error al crear el tema` };
         } finally {
             connection.release();
         }
@@ -368,7 +368,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             console.error(error instanceof Error ? error.message : 'Error desconocido');
             return {
                 success: false,
-                message: `Error al eliminar el tema: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+                message: `Error al eliminar el tema`,
             }
         }
     }
