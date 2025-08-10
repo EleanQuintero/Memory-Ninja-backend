@@ -3,7 +3,7 @@ import { IThemeRepository, themeData } from "../models/interfaces/ThemeRepositor
 export class ThemeService {
 
     constructor(private themeRepository: IThemeRepository) { }
-    async getAllThemes(user_id: string): Promise<{ success: boolean, message: string, themeDTO: themeData[] }> {
+    async getAllThemes(user_id: string): Promise<{ success: boolean, message: string, data: themeData[] }> {
         return await this.themeRepository.getAllThemes(user_id);
     }
 

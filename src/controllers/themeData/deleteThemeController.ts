@@ -23,9 +23,11 @@ export const deleteThemeController = async (req: Request, res: Response): Promis
         res.status(200).json(data)
     } catch (error) {
         if (error instanceof Error) {
-            res.status(500).json({ error: error.message })
+            console.error(error.message)
+            res.status(500).json({ error: "Error al borrar tema" })
         } else {
-            res.status(500).json({ error: 'An unknown error occurred' })
+            console.error(error)
+            res.status(500).json({ error: 'Error desconocido' })
         }
     }
 }
