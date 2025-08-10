@@ -2,6 +2,8 @@ import { Router } from "express";
 import { getAllThemesController } from "../controllers/themeData/getAllThemesController";
 import { deleteThemeController } from "../controllers/themeData/deleteThemeController";
 import { createThemeController } from "../controllers/themeData/createThemeController";
+import { validateBody } from "../middlewares/validateBody";
+import { themeValidatorSchema } from "../schemes/themeValidator";
 
 
 const themeRouter = Router();
@@ -13,7 +15,7 @@ themeRouter.get("/:userId", getAllThemesController);
 themeRouter.delete("/delete/:userId/:themeId", deleteThemeController);
 
 // Endpoint to create a new theme for a user
-themeRouter.post("/create/:userId", createThemeController);
+themeRouter.post("/add/", validateBody(themeValidatorSchema), createThemeController);
 
 
 export default themeRouter;

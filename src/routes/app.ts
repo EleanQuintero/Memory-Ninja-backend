@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { askQuestion } from "../controllers/QuestionController";
-import { validateBody } from "../middlewares/validateQuestionsRequest";
+import { validateBody } from "../middlewares/validateBody";
 import { questionsRequestSchema } from "../schemes/questionRequest";
 
 
