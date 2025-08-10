@@ -327,7 +327,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         }
     }
 
-    async getAllThemes(user_id: string): Promise<{ success: boolean; message: string; themeDTO: themeData[] }> {
+    async getAllThemes(user_id: string): Promise<{ success: boolean; message: string; data: themeData[] }> {
         try {
             const [result] = await pool.query<RowDataPacket[]>(
                 `SELECT 
@@ -346,10 +346,10 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 themeName: row.theme_name as string,
             }));
 
-            return { success: true, message: "Datos obtenidos de forma exitosa", themeDTO: data };
+            return { success: true, message: "Datos obtenidos de forma exitosa", data };
         } catch (error) {
             console.error(error instanceof Error ? error.message : 'Error desconocido');
-            return { success: false, message: `Error al obtener los temas`, themeDTO: [] };
+            return { success: false, message: `Error al obtener los temas`, data: [] };
         }
     }
 
