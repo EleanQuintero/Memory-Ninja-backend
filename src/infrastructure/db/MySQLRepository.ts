@@ -4,9 +4,13 @@ import { IUserRepository } from "../../models/interfaces/UserRepository";
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
+import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository";
 
 
-export class MySQLRepository implements IUserRepository, IDashboardRepository {
+export class MySQLRepository implements IUserRepository, IDashboardRepository, IThemeRepository {
+
+    /*User Data*/
+
     async saveUser(user: UserData): Promise<{ message: string }> {
         try {
             const [result] = await pool.query(
@@ -20,6 +24,8 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
             throw new Error(`Error al crear usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
     }
+
+    /*Flashcard Data*/
 
     async saveFlashcard(data: flashcardToSync): Promise<{ success: boolean, message: string }> {
         const { user_id, flashcard } = data;
@@ -159,6 +165,8 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
         }
     }
 
+    /*Dashboard Data*/
+
     async getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
         try {
             const [result] = await pool.query<RowDataPacket[]>(`
@@ -286,4 +294,84 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository {
 
         }
     }
+
+
+    /*Theme Data*/
+
+    async createTheme(user_id: string, theme_name: string): Promise<{ success: boolean; message: string }> {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            await connection.execute(
+                `INSERT INTO themes (theme_name)
+                VALUES (?)
+                ON DUPLICATE KEY UPDATE theme_id = LAST_INSERT_ID(theme_id);` ,
+                [theme_name],
+            );
+            await connection.execute(`
+                INSERT INTO user_themes (user_id, theme_id)
+                VALUES (?, LAST_INSERT_ID())`,
+                [user_id],
+            );
+
+            await connection.commit();
+            return { success: true, message: "Tema creado exitosamente" };
+        }
+        catch (error: unknown) {
+            await connection.rollback();
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return { success: false, message: `Error al crear el tema` };
+        } finally {
+            connection.release();
+        }
+    }
+
+    async getAllThemes(user_id: string): Promise<{ success: boolean; message: string; data: themeData[] }> {
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(
+                `SELECT 
+                    t.theme_id,t.theme_name
+                FROM users u
+                JOIN user_themes ut 
+                    ON u.id = ut.user_id
+                JOIN themes t 
+                    ON ut.theme_id = t.theme_id
+                WHERE u.id = ?;`,
+                [user_id],
+            );
+
+            const data: themeData[] = result.map(row => ({
+                themeId: row.theme_id as string,
+                themeName: row.theme_name as string,
+            }));
+
+            return { success: true, message: "Datos obtenidos de forma exitosa", data };
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return { success: false, message: `Error al obtener los temas`, data: [] };
+        }
+    }
+
+
+    async deleteTheme(themeId: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        try {
+            await pool.query(
+                `DELETE 
+                FROM user_themes 
+                WHERE user_id = ? AND theme_id = ?;`,
+                [user_id, themeId],
+            );
+
+            return { success: true, message: "Tema eliminado exitosamente" };
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return {
+                success: false,
+                message: `Error al eliminar el tema`,
+            }
+        }
+    }
+
+
 }

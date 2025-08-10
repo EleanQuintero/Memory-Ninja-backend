@@ -5,10 +5,10 @@ export const validateBody = (schema: z.ZodType) => (req: Request, res: Response,
   const result = schema.safeParse(req.body)
 
   if (!result.success) {
-    const errorDetails = result.error.format();
+    const errorDetails = z.prettifyError(result.error);
     res.status(400).json({
       error: 'Datos inválidos',
-      details: errorDetails.id._errors,
+      details: errorDetails,
     });
     return;
   }

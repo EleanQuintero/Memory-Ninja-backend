@@ -1,4 +1,3 @@
-import { flashcard } from "../entities/flashcard/flashCardModel";
 import { IDashboardRepository } from "../models/interfaces/DashboardRepository";
 
 export class DashboardService {
