@@ -3,8 +3,17 @@ import { themeService } from "../../infrastructure/di/themeContainer"
 
 export const deleteThemeController = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { themeId, userId } = req.params
+        const userId = req.user?.id
+        const { themeId } = req.params
+
+        if (!userId) {
+            res.status(400).json({ message: "User ID is required" })
+            return
+        }
+
         const data = await themeService.deleteTheme(themeId, userId)
+
+
 
         if (!data.success) {
             res.status(404).json({ message: data.message })

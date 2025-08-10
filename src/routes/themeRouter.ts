@@ -9,13 +9,13 @@ import { themeValidatorSchema } from "../schemes/themeValidator";
 const themeRouter = Router();
 
 // Endpoint to get all themes for a user
-themeRouter.get("/:userId", getAllThemesController);
+themeRouter.get("/get", getAllThemesController);
 
 // Endpoint to delete a specific theme for a user
-themeRouter.delete("/delete/:userId/:themeId", deleteThemeController);
+themeRouter.delete("/delete/:themeId", deleteThemeController);
 
 // Endpoint to create a new theme for a user
-themeRouter.post("/add/", validateBody(themeValidatorSchema), createThemeController);
+themeRouter.post("/add", validateBody(themeValidatorSchema), createThemeController);
 
 
 export default themeRouter;
