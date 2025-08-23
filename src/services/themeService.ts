@@ -15,5 +15,15 @@ export class ThemeService {
         return await this.themeRepository.createTheme(user_id, theme_name);
     }
 
+    async updateThemeStatus(user_id: string): Promise<{ success: boolean, message: string }> {
+        return await this.themeRepository.updateThemeStatus(user_id);
+    }
+
+    async getThemeStatus(user_id: string): Promise<{ success: boolean, message: string, theme_status: string }> {
+        return await this.themeRepository.getThemeStatus(user_id);
+    }
+
+
+
 
 }

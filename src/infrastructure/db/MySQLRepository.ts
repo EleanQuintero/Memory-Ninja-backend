@@ -374,4 +374,50 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
 
+    async updateThemeStatus(user_id: string): Promise<{ success: boolean; message: string; }> {
+        try {
+            await pool.query(
+                `UPDATE users SET theme_setup = true 
+                WHERE users.id = ? ; `,
+                [user_id],
+            );
+
+            return { success: true, message: "Estado de tema actualizado" };
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return {
+                success: false,
+                message: `Error al actualizar el estado del tema`,
+            }
+        }
+    }
+
+    async getThemeStatus(user_id: string): Promise<{ success: boolean; message: string; theme_status: string; }> {
+
+        try {
+            const [result] = await pool.query<RowDataPacket[]>(`
+                SELECT theme_setup from users 
+                WHERE users.id = ?;`,
+                [user_id])
+
+            const theme_status = result[0]
+
+            return { success: true, message: "Estado de tema obtenido exitosamente", theme_status: theme_status.theme_setup };
+        } catch (error) {
+
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            return {
+                success: false,
+                message: `Error al obtener el estado del tema`,
+                theme_status: '',
+            }
+
+        }
+
+
+
+    }
+
 }
+
+
