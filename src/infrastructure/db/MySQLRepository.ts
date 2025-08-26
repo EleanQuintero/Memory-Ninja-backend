@@ -5,6 +5,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
 import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository";
+import { latestFlashcardsData } from "../../entities/dashboard/dashboardData";
 
 
 export class MySQLRepository implements IUserRepository, IDashboardRepository, IThemeRepository {
@@ -198,7 +199,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
     async getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean; message: string; data: { question: string, theme: string, createdAt: string }[]; }> {
         try {
-            const [result] = await pool.query<RowDataPacket[]>(`
+            const [result] = await pool.query<latestFlashcardsData[]>(`
                 SELECT f.question, t.theme_name, f.created_at 
                 FROM flashcard_data f
                 JOIN themes t ON f.theme_id = t.theme_id 
@@ -209,9 +210,9 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 `, [user_id])
 
             const data = result.map(row => ({
-                question: row.question as string,
-                theme: row.theme_name as string,
-                createdAt: row.created_at as string,
+                question: row.question,
+                theme: row.theme_name,
+                createdAt: row.created_at.toLocaleDateString(),
             }))
 
             return {
