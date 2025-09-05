@@ -4,5 +4,6 @@ export interface QuestionRequest extends Request {
   body: {
     questions: string[];
     tema: string;
+    model: string;
   };
 }

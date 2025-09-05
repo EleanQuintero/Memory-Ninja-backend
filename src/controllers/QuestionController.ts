@@ -5,8 +5,9 @@ import { resolveServices } from '../infrastructure/di/container'
 
 export async function askQuestion(req: QuestionRequest, res: Response): Promise<void> {
 
-    const { tema, questions } = req.body
+    const { tema, questions, model } = req.body
     const userLevel = req.user?.userLevel
+    console.log('Model selected:', model)
 
     const service = resolveServices(userLevel as string)
 
