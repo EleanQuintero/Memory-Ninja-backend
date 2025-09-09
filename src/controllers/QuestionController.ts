@@ -9,7 +9,12 @@ export async function askQuestion(req: QuestionRequest, res: Response): Promise<
     const userLevel = req.user?.userLevel
     console.log('Model selected:', model)
 
-    const service = resolveServices(userLevel as string)
+    if (!userLevel) {
+        res.status(400).json({ error: "User level is required" })
+        return
+    }
+
+    const service = resolveServices({ userLevel, model })
 
 
     if (questions.length === 1) {
