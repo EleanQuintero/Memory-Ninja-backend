@@ -181,6 +181,14 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 `, [user_id],
             )
 
+            if (!result || result.length === 0) {
+                return {
+                    success: true,
+                    message: "El usuario aún no tiene flashcards creadas",
+                    data: [],
+                }
+            }
+
             const data = result.map(row => ({
                 theme: row.theme_name as string,
                 count: row.flashcard_count as number,
@@ -208,6 +216,15 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 ORDER BY f.created_at DESC
                 LIMIT 4;
                 `, [user_id])
+
+
+            if (!result || result.length === 0) {
+                return {
+                    success: true,
+                    message: "El usuario aún no tiene flashcards creadas",
+                    data: [],
+                }
+            }
 
             const data = result.map(row => ({
                 question: row.question,
@@ -242,6 +259,16 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 GROUP BY f.user_id;
                 `, [user_id])
 
+
+            if (!result || result.length === 0) {
+                return {
+                    success: true,
+                    message: "El usuario aún no tiene flashcards creadas",
+                    count: 0,
+                }
+            }
+
+
             const data = result.map(row => ({
                 count: row.flashcard_count as number,
             }))
@@ -269,6 +296,18 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 order by flashcard_count desc
                 LIMIT 1;
                 `, [user_id])
+
+
+            if (!result || result.length === 0) {
+                return {
+                    success: true,
+                    message: "El usuario aún no tiene flashcards creadas",
+                    data: {
+                        theme: "Sin temas disponibles",
+                        count: 0,
+                    },
+                }
+            }
 
             const data = result.map(row => ({
                 theme: row.theme_name as string,
