@@ -4,13 +4,13 @@ import { flashcardData } from "../models/interfaces/flashcardData";
 import { flashcard, flashcardToSync } from "../entities/flashcard/flashCardModel";
 
 export class UserService {
-    constructor(private userRepo: MySQLRepository) {}
+    constructor(private userRepo: MySQLRepository) { }
 
-    async createUser(data: UserData): Promise<{message: string}> {
+    async createUser(data: UserData): Promise<{ message: string }> {
         return this.userRepo.saveUser(data)
     }
 
-    async saveFlashcard(data: flashcardToSync): Promise<{success: boolean, message: string}> {
+    async saveFlashcard(data: flashcardToSync): Promise<{ success: boolean, message: string }> {
         return this.userRepo.saveFlashcard(data)
     }
 
@@ -20,6 +20,10 @@ export class UserService {
 
     async deleteFlashcard(flashcard_id: string, user_id: string): Promise<{ success: boolean; message: string; }> {
         return this.userRepo.deleteFlashcard(flashcard_id, user_id)
+    }
+
+    async deleteUser(user_id: string): Promise<{ message: string }> {
+        return this.userRepo.deleteUser(user_id)
     }
 
 }

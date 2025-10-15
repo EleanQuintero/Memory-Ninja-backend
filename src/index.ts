@@ -8,6 +8,7 @@ import { limiter } from './services/rateLimiter'
 import dashboardRouter from './routes/dashboardRouter'
 import { validateAuth } from './middlewares/validateAuth'
 import themeRouter from './routes/themeRouter'
+import deleteRouter from './routes/deleteUser'
 
 dotenv.config()
 const PORT: number | string = process.env.PORT ?? 4444
@@ -18,6 +19,7 @@ app.use(helmet())
 app.disable('x-powered-by')
 app.use('/api/questions', validateAuth, limiter({ minuteDuration: 1, maxRequest: 5 }), appRouter)
 app.use('/api/user', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), userRouter)
+app.use('/api/user/delete', deleteRouter)
 app.use('/api/health', validateAuth, limiter({ minuteDuration: 1, maxRequest: 3 }), healthRouter)
 app.use('/api/dashboard', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), dashboardRouter)
 app.use('/api/themes', validateAuth, limiter({ minuteDuration: 1, maxRequest: 10 }), themeRouter)

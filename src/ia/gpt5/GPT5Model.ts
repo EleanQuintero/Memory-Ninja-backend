@@ -17,6 +17,7 @@ export class GPTmini implements IAInterface {
 
 
     async generateAnswer(tema: string, questions: string[]): Promise<string> {
+        console.log(this.token)
         try {
             console.log("Generating answer with GPT-5 Mini model...");
             const client = new OpenAI({ baseURL: this.endpoint, apiKey: this.token, timeout: 10000, maxRetries: 1 });
