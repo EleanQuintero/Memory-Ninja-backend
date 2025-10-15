@@ -25,6 +25,27 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             throw new Error(`Error al crear usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
     }
+    async deleteUser(userId: string): Promise<{ message: string }> {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            await connection.query('DELETE FROM flashcard_data WHERE user_id = ?', [userId]);
+            await connection.query('DELETE FROM questions WHERE user_id = ?', [userId]);
+            await connection.query('DELETE FROM user_themes WHERE user_id = ?', [userId]);
+            await connection.query('DELETE FROM users WHERE id = ?', [userId]);
+
+            await connection.commit();
+            console.log("Usuario eliminado exitosamente");
+            return { message: "Usuario eliminado exitosamente" };
+        } catch (error: unknown) {
+            await connection.rollback();
+            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            throw new Error(`Error al eliminar usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+        } finally {
+            connection.release();
+        }
+    }
 
     /*Flashcard Data*/
 
