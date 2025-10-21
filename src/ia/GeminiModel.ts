@@ -3,10 +3,10 @@ import { IAInterface } from "./IAInterface";
 
 interface GenerationConfig {
   responseMimeType:
-    | "text/plain"
-    | "text/html"
-    | "application/json"
-    | "text/markdown";
+  | "text/plain"
+  | "text/html"
+  | "application/json"
+  | "text/markdown";
 }
 
 export class GeminiModel implements IAInterface {
@@ -23,7 +23,11 @@ export class GeminiModel implements IAInterface {
   }
 
   async generateAnswer(tema: string, pregunta: string[]): Promise<string> {
-    const prompt = `Eres un experto en ${tema}. Responde con precisión, claridad y brevedad a la siguiente pregunta: ${pregunta}. Explica con un lenguaje directo y fácil de entender. Es muy importante que la respuesta no sea de mas de 256 caracteres.`;
+    const prompt = `Actúa como un experto exclusivamente en ${tema}.
+                    Responde solo desde la perspectiva de ${tema}, ignorando cualquier otro campo.
+                    Si hay ambigüedad, interprétala siempre en el contexto de ${tema}.
+                    Da una respuesta precisa, clara y breve (máx. 256 caracteres)  Esta es la pregunta: ${pregunta}.
+`;
     const contents = [
       {
         role: "user",
@@ -72,7 +76,7 @@ export class GeminiModel implements IAInterface {
       .map((question, index) => `P${index + 1}: ${question}`)
       .join("\n");
 
-     //2: Definimos un prompt para este metodo que trabaja multiples preguntas 
+    //2: Definimos un prompt para este metodo que trabaja multiples preguntas 
     const prompt = `Eres un experto en ${tema}. Responde con precisión, claridad y brevedad a las siguientes preguntas numeradas. Para cada respuesta, comienza con "Respuesta X:" donde X es el número de la pregunta. Las respuestas deben ser precisas y cortas:
 
 ${readyQuestions}
@@ -99,7 +103,7 @@ Asegúrate de mantener el formato exacto "Respuesta X:" para cada respuesta.`;
     });
 
     try {
-    //5: Limpiamos los resultados y ordenamos para una mejor respuesta
+      //5: Limpiamos los resultados y ordenamos para una mejor respuesta
       const chunks: string[] = [];
 
       for await (const chunk of rawResult) {
