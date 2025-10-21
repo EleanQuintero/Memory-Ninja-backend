@@ -9,10 +9,10 @@ importers:
   .:
     dependencies:
       '@clerk/backend':
-        specifier: ^2.6.2
+        specifier: 2.6.2
         version: 2.6.2(react@19.1.1)
       '@google/genai':
-        specifier: ^1.9.0
+        specifier: 1.9.0
         version: 1.9.0(@modelcontextprotocol/sdk@1.11.4)
       '@typescript-eslint/eslint-plugin':
         specifier: 8.32.1
@@ -21,17 +21,20 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       express-rate-limit:
-        specifier: ^8.0.1
+        specifier: 8.0.1
         version: 8.0.1(express@5.1.0)
       helmet:
-        specifier: ^8.1.0
+        specifier: 8.1.0
         version: 8.1.0
       mime:
-        specifier: ^4.0.7
+        specifier: 4.0.7
         version: 4.0.7
       mysql2:
-        specifier: ^3.14.2
+        specifier: 3.14.2
         version: 3.14.2
+      openai:
+        specifier: 5.20.0
+        version: 5.20.0(ws@8.18.3)(zod@4.0.5)
       zod:
         specifier: 4.0.5
         version: 4.0.5
@@ -43,46 +46,46 @@ importers:
         specifier: 5.0.2
         version: 5.0.2
       '@types/jest':
-        specifier: ^30.0.0
+        specifier: 30.0.0
         version: 30.0.0
       '@types/node':
         specifier: 24.0.14
         version: 24.0.14
       '@types/supertest':
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       '@typescript-eslint/parser':
         specifier: 8.32.1
         version: 8.32.1(eslint@9.27.0)(typescript@5.8.3)
       dotenv:
-        specifier: ^17.2.1
+        specifier: 17.2.1
         version: 17.2.1
       eslint:
         specifier: 9.27.0
         version: 9.27.0
       eslint-config-love:
-        specifier: ^121.0.0
+        specifier: 121.0.0
         version: 121.0.0(@typescript-eslint/parser@8.32.1(eslint@9.27.0)(typescript@5.8.3))(eslint@9.27.0)(typescript@5.8.3)
       jest:
-        specifier: ^30.0.5
+        specifier: 30.0.5
         version: 30.0.5(@types/node@24.0.14)(ts-node@10.9.2(@types/node@24.0.14)(typescript@5.8.3))
       jest-environment-node:
-        specifier: ^30.0.5
+        specifier: 30.0.5
         version: 30.0.5
       nodemon:
-        specifier: ^3.1.10
+        specifier: 3.1.10
         version: 3.1.10
       supertest:
-        specifier: ^7.1.4
+        specifier: 7.1.4
         version: 7.1.4
       ts-jest:
-        specifier: ^29.4.0
+        specifier: 29.4.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@30.0.5(@babel/core@7.28.0))(jest-util@30.0.5)(jest@30.0.5(@types/node@24.0.14)(ts-node@10.9.2(@types/node@24.0.14)(typescript@5.8.3)))(typescript@5.8.3)
       ts-node:
         specifier: 10.9.2
         version: 10.9.2(@types/node@24.0.14)(typescript@5.8.3)
       ts-node-dev:
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0(@types/node@24.0.14)(typescript@5.8.3)
       typescript:
         specifier: 5.8.3
@@ -2328,6 +2331,18 @@ packages:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
     engines: {node: '>=6'}
 
+  openai@5.20.0:
+    resolution: {integrity: sha512-Bmc2zLM/YWgFrDpXr9hwXqGGDdMmMpE9+qoZPsaHpn0Y/Qk1Vu26hNqXo7+nHdli+sLsXINvS1f8kR3NKhGKmA==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -4532,7 +4547,7 @@ snapshots:
 
   eslint-config-love@121.0.0(@typescript-eslint/parser@8.32.1(eslint@9.27.0)(typescript@5.8.3))(eslint@9.27.0)(typescript@5.8.3):
     dependencies:
-      '@typescript-eslint/utils': 8.32.1(eslint@9.27.0)(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.37.0(eslint@9.27.0)(typescript@5.8.3)
       eslint: 9.27.0
       eslint-plugin-eslint-comments: 3.2.0(eslint@9.27.0)
       eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.32.1(eslint@9.27.0)(typescript@5.8.3))(eslint@9.27.0)
@@ -5823,6 +5838,11 @@ snapshots:
   onetime@5.1.2:
     dependencies:
       mimic-fn: 2.1.0
+
+  openai@5.20.0(ws@8.18.3)(zod@4.0.5):
+    optionalDependencies:
+      ws: 8.18.3
+      zod: 4.0.5
 
   optionator@0.9.4:
     dependencies:

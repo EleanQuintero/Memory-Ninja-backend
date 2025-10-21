@@ -1,11 +1,17 @@
 import { pool } from "./mysql";
 import { UserData } from "../../entities/users/userModel";
 import { IUserRepository } from "../../models/interfaces/UserRepository";
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket, FieldPacket } from 'mysql2';
 import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
 import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
 import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository";
 import { latestFlashcardsData } from "../../entities/dashboard/dashboardData";
+
+interface FlashcardRow extends RowDataPacket {
+    flashcard_id: string;
+    original_question_id: number;
+    original_answer_id: number;
+}
 
 
 export class MySQLRepository implements IUserRepository, IDashboardRepository, IThemeRepository {
@@ -59,45 +65,61 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             for (const card of flashcard) {
                 const { question, answer, theme } = card;
 
-                // 1. Insertar tema si no existe
+                // Obtenemos el ID del tema
                 const [existingTheme] = await connection.execute<RowDataPacket[]>(
                     'SELECT theme_id FROM themes WHERE theme_name = ?',
                     [theme],
                 );
-                let themeID;
-                if (Array.isArray(existingTheme) && existingTheme.length === 0) {
-                    const [themeResult] = await connection.execute<ResultSetHeader>(
-                        'INSERT INTO themes (theme_name) VALUES (?)',
-                        [theme],
-                    );
-                    themeID = themeResult.insertId;
-                } else {
-                    themeID = existingTheme[0].theme_id;
-                }
-
-                // 2. Asociar tema al usuario si no existe
-                await connection.execute(
-                    `INSERT IGNORE INTO user_themes (user_id, theme_id) VALUES (?, ?)`,
-                    [user_id, themeID],
-                );
+                const themeID = existingTheme[0].theme_id;
 
                 let questionID;
 
-                // 3.1. Verificar si la pregunta ya existe para este usuario y tema
+                // 2 Verificamos si la pregunta ya existe para este usuario y tema
                 const [existingQuestion] = await connection.execute<RowDataPacket[]>(
-                    'SELECT question_id FROM questions WHERE user_id = ? AND question = ? AND theme_id = ?',
-                    [user_id, question, themeID],
+                    'SELECT question_id FROM questions WHERE question = ? AND theme_id = ?',
+                    [question, themeID],
                 );
 
                 if (Array.isArray(existingQuestion) && existingQuestion.length > 0) {
-                    // Si la pregunta existe, usar su ID
+
+                    //Si la pregunta existe, usar su ID
                     questionID = existingQuestion[0].question_id;
+
+                    const [userQuestion] = await connection.execute<RowDataPacket[]>(
+                        'SELECT * FROM users_questions WHERE user_id = ? AND question_id = ?',
+                        [user_id, questionID],
+                    );
+
+                    if (userQuestion.length > 0) { throw new Error('Ya tienes esta pregunta guardada'); }
+
+                    //Insertamos la respuesta y asociamos a la pregunta existente
+
+                    const [aRes] = await connection.execute<ResultSetHeader>(
+                        'INSERT INTO answers (question_id, answer_text) VALUES (?, ?)',
+                        [questionID, answer],
+                    );
+                    const answerID = aRes.insertId;
+
+                    // Relacionar usuario con pregunta
+                    await connection.execute(
+                        'INSERT INTO users_questions (user_id, question_id) VALUES (?, ?)',
+                        [user_id, questionID],
+                    );
+
+                    await connection.execute(
+                        `INSERT INTO flashcard_data
+                        (question, answer, user_id, theme_id, original_question_id, original_answer_id)
+                        VALUES (?, ?, ?, ?, ?, ?)`,
+                        [question, answer, user_id, themeID, questionID, answerID],
+                    );
+
                 } else {
-                    // 3.2. Si la pregunta no existe, insertarla
+                    // 3 Si la pregunta no existe, insertarla
                     const [qRes] = await connection.execute<ResultSetHeader>(
                         'INSERT INTO questions (user_id, question, theme_id) VALUES (?, ?, ?)',
                         [user_id, question, themeID],
                     );
+
                     questionID = qRes.insertId;
 
                     // Insertar la respuesta solo si la pregunta es nueva.
@@ -160,30 +182,62 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async deleteFlashcard(flashcard_id: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        const connection = await pool.getConnection();
         try {
-            const [result] = await pool.query<RowDataPacket[]>(
-                `SELECT flashcard_id 
+
+            await connection.beginTransaction();
+
+            const [rows, fields]: [FlashcardRow[], FieldPacket[]] = await connection.execute(
+                `SELECT flashcard_id, original_question_id, original_answer_id
                 FROM flashcard_data
                 WHERE user_id = ? AND flashcard_id LIKE ?;`,
                 [user_id, `${flashcard_id}%`],
-            )
-            const idToDelete = result[0].flashcard_id
+            );
 
-            const [finalResult] = await pool.query<RowDataPacket[]>(
-                `DELETE from flashcard_data
+            if (rows.length === 0) {
+                throw new Error('Flashcard no encontrada');
+            }
+
+
+            const idToDelete = rows[0].flashcard_id;
+            const original_question_id = rows[0].original_question_id;
+            const original_answer_id = rows[0].original_answer_id;
+
+            await connection.execute(
+                `DELETE FROM flashcard_data 
                 WHERE user_id = ? AND flashcard_id = ?;`,
                 [user_id, idToDelete],
-            )
+            );
+
+            if (original_answer_id) {
+                await connection.execute(
+                    `DELETE FROM answers 
+                    WHERE answer_id = ?;`,
+                    [original_answer_id],
+                );
+            }
+
+            await connection.execute(
+                `DELETE FROM users_questions 
+                WHERE user_id = ? AND question_id = ?;`,
+                [user_id, original_question_id],
+            );
+
+            await connection.commit();
+
+
             return {
                 success: true,
                 message: "Flashcard eliminada correctamente",
             }
         } catch (error) {
+            await connection.rollback();
             return {
                 success: false,
                 message: "Error al eliminar la flashcard",
             }
-
+        } finally {
+            connection.release();
         }
     }
 
