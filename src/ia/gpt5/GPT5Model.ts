@@ -3,7 +3,7 @@ import { IAInterface } from "../IAInterface";
 
 
 export class GPTmini implements IAInterface {
-    private model: string = "openai/gpt-5-mini";
+    private model: string = "openai/gpt-5";
     private endpoint: string = process.env.KURAYAMI_ENDPOINT || ""
     private token: string | undefined = process.env.GPT5_GITHUB_TOKEN;
 
@@ -17,14 +17,19 @@ export class GPTmini implements IAInterface {
 
 
     async generateAnswer(tema: string, questions: string[]): Promise<string> {
-        console.log(this.token)
         try {
-            console.log("Generating answer with GPT-5 Mini model...");
+            console.log("Generating answer with GPT-5 ");
             const client = new OpenAI({ baseURL: this.endpoint, apiKey: this.token, timeout: 10000, maxRetries: 1 });
             const response = await client.chat.completions.create({
                 messages: [
-                    { role: "system", content: `Eres un experto en ${tema}. Responde con precisión, claridad y brevedad a la siguiente pregunta. Explica con un lenguaje directo y fácil de entender. Es muy importante que la respuesta no sea de mas de 256 caracteres.` },
-                    { role: "user", content: questions[0] },
+                    {
+                        role: "system",
+                        content: `Eres un experto EXCLUSIVAMENTE en ${tema}. 
+                                    Tu respuesta debe estar 100% relacionada con el contexto de ${tema}.
+                                    Si la pregunta contiene términos ambiguos, SIEMPRE interprétalos desde la perspectiva de ${tema}.
+                                    Ignora cualquier otra interpretación de otros campos o disciplinas.
+                                    Responde con precisión, claridad y brevedad. Máximo 256 caracteres.` },
+                    { role: "user", content: `En el contexto específico de ${tema}: ${questions[0]}` },
                 ],
                 model: this.model,
             });
