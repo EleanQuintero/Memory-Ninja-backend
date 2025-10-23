@@ -1,8 +1,7 @@
-import express, { Request, Response } from 'express'
+import express from 'express'
 import dotenv from 'dotenv'
 import appRouter from './routes/app'
 import userRouter from './routes/userRouter'
-import healthRouter from './routes/health'
 import helmet from 'helmet'
 import { limiter } from './services/rateLimiter'
 import dashboardRouter from './routes/dashboardRouter'
@@ -20,7 +19,6 @@ app.disable('x-powered-by')
 app.use('/api/questions', validateAuth, limiter({ minuteDuration: 1, maxRequest: 5 }), appRouter)
 app.use('/api/user/delete', deleteRouter)
 app.use('/api/user', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), userRouter)
-app.use('/api/health', validateAuth, limiter({ minuteDuration: 1, maxRequest: 3 }), healthRouter)
 app.use('/api/dashboard', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), dashboardRouter)
 app.use('/api/themes', validateAuth, limiter({ minuteDuration: 1, maxRequest: 10 }), themeRouter)
 
