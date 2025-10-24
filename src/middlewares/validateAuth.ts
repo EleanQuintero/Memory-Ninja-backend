@@ -1,6 +1,7 @@
 import { verifyToken } from "@clerk/backend";
 import { NextFunction, Request, Response } from "express";
 import { VerifiedToken } from "../models/interfaces/auth";
+import { env } from "../config/env";
 
 declare global {
     namespace Express {
@@ -26,7 +27,7 @@ export const validateAuth = async (req: Request, res: Response, next: NextFuncti
         }
 
         const verifiedToken = await verifyToken(token, {
-            jwtKey: process.env.CLERK_JWT_KEY,
+            jwtKey: env.CLERK_JWT_KEY,
         })
 
         const tokenData = verifiedToken as unknown as VerifiedToken
