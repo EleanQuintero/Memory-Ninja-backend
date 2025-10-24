@@ -1,5 +1,5 @@
 import express from 'express'
-import dotenv from 'dotenv'
+import { env } from './config/env'
 import appRouter from './routes/app'
 import userRouter from './routes/userRouter'
 import helmet from 'helmet'
@@ -9,10 +9,8 @@ import { validateAuth } from './middlewares/validateAuth'
 import themeRouter from './routes/themeRouter'
 import deleteRouter from './routes/deleteUser'
 
-dotenv.config()
-const PORT: number | string = process.env.PORT ?? 4444
+const PORT: number | string = env.PORT
 const app = express()
-dotenv.config()
 app.use(express.json())
 app.use(helmet())
 app.disable('x-powered-by')
