@@ -1,5 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { IAInterface } from "./IAInterface";
+import { manyQuestionsPrompt } from "./utils/manyQuestionsBuilder";
+import { questionsPrompt } from "./utils/questionsBuilder";
 
 interface GenerationConfig {
   responseMimeType:
@@ -11,23 +13,19 @@ interface GenerationConfig {
 
 export class GeminiModel implements IAInterface {
   private genAI: GoogleGenAI;
-  private modelName: string = "gemini-2.0-flash";
+  private modelName: string;
   private config: GenerationConfig;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model: string) {
     this.genAI = new GoogleGenAI({ apiKey: apiKey });
-    this.modelName = this.modelName;
+    this.modelName = model;
     this.config = {
       responseMimeType: "text/plain",
     };
   }
 
   async generateAnswer(tema: string, pregunta: string[]): Promise<string> {
-    const prompt = `Actúa como un experto exclusivamente en ${tema}.
-                    Responde solo desde la perspectiva de ${tema}, ignorando cualquier otro campo.
-                    Si hay ambigüedad, interprétala siempre en el contexto de ${tema}.
-                    Da una respuesta precisa, clara y breve (máx. 256 caracteres)  Esta es la pregunta: ${pregunta}.
-`;
+    const prompt = questionsPrompt(tema, pregunta[0]);
     const contents = [
       {
         role: "user",
@@ -76,12 +74,11 @@ export class GeminiModel implements IAInterface {
       .map((question, index) => `P${index + 1}: ${question}`)
       .join("\n");
 
+
+
+
     //2: Definimos un prompt para este metodo que trabaja multiples preguntas 
-    const prompt = `Eres un experto en ${tema}. Responde con precisión, claridad y brevedad a las siguientes preguntas numeradas. Para cada respuesta, comienza con "Respuesta X:" donde X es el número de la pregunta. Las respuestas deben ser precisas y cortas:
-
-${readyQuestions}
-
-Asegúrate de mantener el formato exacto "Respuesta X:" para cada respuesta.`;
+    const prompt = manyQuestionsPrompt(tema, readyQuestions);
 
     //3:Definimos el contenido
     const contents = [
