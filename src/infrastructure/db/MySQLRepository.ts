@@ -13,12 +13,19 @@ interface FlashcardRow extends RowDataPacket {
     original_answer_id: number;
 }
 
+function queryLog(query: string): void {
+    const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    console.log(`query: ${query} - Hora de ejecucion: ${hour}`);
+
+}
+
 
 export class MySQLRepository implements IUserRepository, IDashboardRepository, IThemeRepository {
 
     /*User Data*/
 
     async saveUser(user: UserData): Promise<{ message: string }> {
+        queryLog('Save user');
         try {
             const [result] = await pool.query(
                 'INSERT INTO users (id, name, lastName, email, role) VALUES (?, ?, ?, ?, ?)',
@@ -32,6 +39,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         }
     }
     async deleteUser(userId: string): Promise<{ message: string }> {
+        queryLog('Delete user');
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
@@ -56,97 +64,221 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     /*Flashcard Data*/
 
     async saveFlashcard(data: flashcardToSync): Promise<{ success: boolean, message: string }> {
+        queryLog('Save flashcard - OPTIMIZED');
+
         const { user_id, flashcard } = data;
         const connection = await pool.getConnection();
 
         try {
             await connection.beginTransaction();
 
-            for (const card of flashcard) {
-                const { question, answer, theme } = card;
+            // ═══════════════════════════════════════════════════════════════
+            // FASE 1: PRE-CARGA DE DATOS (3 queries en lugar de N×6)
+            // ═══════════════════════════════════════════════════════════════
 
-                // Obtenemos el ID del tema
-                const [existingTheme] = await connection.execute<RowDataPacket[]>(
-                    'SELECT theme_id FROM themes WHERE theme_name = ?',
-                    [theme],
-                );
-                const themeID = existingTheme[0].theme_id;
+            // 1.1 Obtener todos los theme_id únicos de una sola vez
+            const uniqueThemes = [...new Set(flashcard.map(c => c.theme))];
+            const [themesRows] = await connection.query<RowDataPacket[]>(
+                'SELECT theme_id, theme_name FROM themes WHERE theme_name IN (?)',
+                [uniqueThemes],
+            );
 
-                let questionID;
+            // Crear mapa para acceso O(1): theme_name → theme_id
+            const themeMap = new Map<string, number>();
+            for (const row of themesRows) {
+                themeMap.set(row.theme_name, row.theme_id);
+            }
 
-                // 2 Verificamos si la pregunta ya existe para este usuario y tema
-                const [existingQuestion] = await connection.execute<RowDataPacket[]>(
-                    'SELECT question_id FROM questions WHERE question = ? AND theme_id = ?',
-                    [question, themeID],
-                );
-
-                if (Array.isArray(existingQuestion) && existingQuestion.length > 0) {
-
-                    //Si la pregunta existe, usar su ID
-                    questionID = existingQuestion[0].question_id;
-
-                    const [userQuestion] = await connection.execute<RowDataPacket[]>(
-                        'SELECT * FROM users_questions WHERE user_id = ? AND question_id = ?',
-                        [user_id, questionID],
-                    );
-
-                    if (userQuestion.length > 0) { throw new Error('Ya tienes esta pregunta guardada'); }
-
-                    //Insertamos la respuesta y asociamos a la pregunta existente
-
-                    const [aRes] = await connection.execute<ResultSetHeader>(
-                        'INSERT INTO answers (question_id, answer_text) VALUES (?, ?)',
-                        [questionID, answer],
-                    );
-                    const answerID = aRes.insertId;
-
-                    // Relacionar usuario con pregunta
-                    await connection.execute(
-                        'INSERT INTO users_questions (user_id, question_id) VALUES (?, ?)',
-                        [user_id, questionID],
-                    );
-
-                    await connection.execute(
-                        `INSERT INTO flashcard_data
-                        (question, answer, user_id, theme_id, original_question_id, original_answer_id)
-                        VALUES (?, ?, ?, ?, ?, ?)`,
-                        [question, answer, user_id, themeID, questionID, answerID],
-                    );
-
-                } else {
-                    // 3 Si la pregunta no existe, insertarla
-                    const [qRes] = await connection.execute<ResultSetHeader>(
-                        'INSERT INTO questions (user_id, question, theme_id) VALUES (?, ?, ?)',
-                        [user_id, question, themeID],
-                    );
-
-                    questionID = qRes.insertId;
-
-                    // Insertar la respuesta solo si la pregunta es nueva.
-                    const [aRes] = await connection.execute<ResultSetHeader>(
-                        'INSERT INTO answers (question_id, answer_text) VALUES (?, ?)',
-                        [questionID, answer],
-                    );
-                    const answerID = aRes.insertId;
-
-                    // Relacionar usuario con pregunta
-                    await connection.execute(
-                        `INSERT INTO users_questions (user_id, question_id) VALUES (?, ?)`,
-                        [user_id, questionID],
-                    );
-
-                    // Insertar en flashcard_data
-                    await connection.execute(
-                        `INSERT INTO flashcard_data
-                        (question, answer, user_id, theme_id, original_question_id, original_answer_id)
-                        VALUES (?, ?, ?, ?, ?, ?)`,
-                        [question, answer, user_id, themeID, questionID, answerID],
+            // Validar que todos los temas existen
+            for (const themeName of uniqueThemes) {
+                if (!themeMap.has(themeName)) {
+                    throw new Error(
+                        `El tema "${themeName}" no existe. Por favor, créalo primero desde la configuración.`,
                     );
                 }
             }
 
+            // 1.2 Obtener todas las preguntas que el usuario ya tiene
+            const [userQuestionsRows] = await connection.query<RowDataPacket[]>(
+                'SELECT question_id FROM users_questions WHERE user_id = ?',
+                [user_id],
+            );
+
+            // Crear Set para verificación O(1): ¿el usuario tiene esta pregunta?
+            const userQuestionIds = new Set<number>(
+                userQuestionsRows.map(row => row.question_id as number),
+            );
+
+            // 1.3 Obtener todas las preguntas existentes en los temas relevantes
+            const themeIds = [...themeMap.values()];
+            const [existingQuestionsRows] = await connection.query<RowDataPacket[]>(
+                'SELECT question_id, question, theme_id FROM questions WHERE theme_id IN (?)',
+                [themeIds],
+            );
+
+            // Crear mapa para acceso O(1): "pregunta|theme_id" → question_id
+            const questionMap = new Map<string, number>();
+            for (const row of existingQuestionsRows) {
+                const key = `${row.question}|${row.theme_id}`;
+                questionMap.set(key, row.question_id as number);
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FASE 2: PROCESAMIENTO EN MEMORIA (sin queries)
+            // ═══════════════════════════════════════════════════════════════
+
+            // Arrays para acumular datos de inserción batch
+            const newQuestions: [string, string, number][] = [];
+            const newAnswers: { questionKey: string; answer: string; isNewQuestion: boolean }[] = [];
+            const newUserQuestions: [string, number][] = [];
+            const newFlashcards: [string, string, string, number, string, string][] = [];
+
+            // Mapas para tracking temporal de IDs (para preguntas nuevas)
+            const tempQuestionIds = new Map<string, number>();
+            let tempQuestionIdCounter = -1; // IDs temporales negativos
+
+            for (const card of flashcard) {
+                const { question, answer, theme } = card;
+                const themeID = themeMap.get(theme)!; // Ya validamos que existe
+                const questionKey = `${question}|${themeID}`;
+
+                let questionID = questionMap.get(questionKey);
+
+                if (questionID) {
+                    // CASO A: La pregunta ya existe globalmente
+
+                    // Verificar si el usuario ya la tiene
+                    if (userQuestionIds.has(questionID)) {
+                        throw new Error('Ya tienes esta pregunta guardada');
+                    }
+
+                    // Preparar datos para inserción batch
+                    newAnswers.push({ questionKey, answer, isNewQuestion: false });
+                    newUserQuestions.push([user_id, questionID]);
+                    // Guardaremos flashcard_data después con el answer_id real
+                    newFlashcards.push([question, answer, user_id, themeID, 'PLACEHOLDER_Q', 'PLACEHOLDER_A']);
+
+                } else {
+                    // CASO B: La pregunta NO existe, debemos crearla
+
+                    // Asignar ID temporal para tracking
+                    const tempId = tempQuestionIdCounter--;
+                    tempQuestionIds.set(questionKey, tempId);
+
+                    // Preparar datos para inserción batch
+                    newQuestions.push([user_id, question, themeID]);
+                    newAnswers.push({ questionKey, answer, isNewQuestion: true });
+                    newUserQuestions.push([user_id, tempId]); // Usará ID temporal por ahora
+                    newFlashcards.push([question, answer, user_id, themeID, 'PLACEHOLDER_Q', 'PLACEHOLDER_A']);
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FASE 3: INSERCIÓN BATCH (4-6 queries en total)
+            // ═══════════════════════════════════════════════════════════════
+
+            // 3.1 Insertar preguntas nuevas en batch
+            let insertedQuestionIds: number[] = [];
+            if (newQuestions.length > 0) {
+                const [result] = await connection.query<ResultSetHeader>(
+                    'INSERT INTO questions (user_id, question, theme_id) VALUES ?',
+                    [newQuestions],
+                );
+
+                // MySQL retorna el primer insertId, los demás son consecutivos
+                const firstId = result.insertId;
+                insertedQuestionIds = Array.from(
+                    { length: newQuestions.length },
+                    (_, i) => firstId + i,
+                );
+
+                // Actualizar questionMap con las nuevas preguntas
+                for (let i = 0; i < newQuestions.length; i++) {
+                    const [userId, question, themeId] = newQuestions[i];
+                    const key = `${question}|${themeId}`;
+                    questionMap.set(key, insertedQuestionIds[i]);
+                }
+            }
+
+            // 3.2 Preparar datos de respuestas con question_id reales
+            const answersToInsert: [number, string][] = [];
+            const answerMetadata: { flashcardIndex: number; questionKey: string }[] = [];
+
+            let flashcardIndex = 0;
+            for (const answerData of newAnswers) {
+                const realQuestionId = questionMap.get(answerData.questionKey)!;
+                answersToInsert.push([realQuestionId, answerData.answer]);
+                answerMetadata.push({ flashcardIndex, questionKey: answerData.questionKey });
+                flashcardIndex++;
+            }
+
+            // 3.3 Insertar respuestas en batch
+            let insertedAnswerIds: number[] = [];
+            if (answersToInsert.length > 0) {
+                const [result] = await connection.query<ResultSetHeader>(
+                    'INSERT INTO answers (question_id, answer_text) VALUES ?',
+                    [answersToInsert],
+                );
+
+                const firstId = result.insertId;
+                insertedAnswerIds = Array.from(
+                    { length: answersToInsert.length },
+                    (_, i) => firstId + i,
+                );
+            }
+
+            // 3.4 Preparar users_questions con IDs reales
+            const userQuestionsToInsert: [string, number][] = [];
+            for (const [userId, questionId] of newUserQuestions) {
+                if (questionId < 0) {
+                    // Era un ID temporal, buscar el real
+                    const realId = insertedQuestionIds[Math.abs(questionId) - 1];
+                    userQuestionsToInsert.push([userId, realId]);
+                } else {
+                    // Ya era un ID real
+                    userQuestionsToInsert.push([userId, questionId]);
+                }
+            }
+
+            // 3.5 Insertar users_questions en batch
+            if (userQuestionsToInsert.length > 0) {
+                await connection.query(
+                    'INSERT INTO users_questions (user_id, question_id) VALUES ?',
+                    [userQuestionsToInsert],
+                );
+            }
+
+            // 3.6 Preparar flashcard_data con IDs reales
+            const flashcardsToInsert: [string, string, string, number, number, number][] = [];
+            for (let i = 0; i < newFlashcards.length; i++) {
+                const [question, answer, userId, themeId, _, __] = newFlashcards[i];
+                const metadata = answerMetadata[i];
+                const realQuestionId = questionMap.get(metadata.questionKey)!;
+                const realAnswerId = insertedAnswerIds[i];
+
+                flashcardsToInsert.push([
+                    question,
+                    answer,
+                    userId,
+                    themeId,
+                    realQuestionId,
+                    realAnswerId,
+                ]);
+            }
+
+            // 3.7 Insertar flashcard_data en batch
+            if (flashcardsToInsert.length > 0) {
+                await connection.query(
+                    `INSERT INTO flashcard_data 
+                    (question, answer, user_id, theme_id, original_question_id, original_answer_id) 
+                    VALUES ?`,
+                    [flashcardsToInsert],
+                );
+            }
+
             await connection.commit();
             return { success: true, message: 'Flashcards insertadas correctamente.' };
+
         } catch (error: unknown) {
             await connection.rollback();
             console.error('Error insertando flashcards:', error);
@@ -160,9 +292,8 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async getFlashcardsByID(user_id: string): Promise<{ success: boolean; message: string; data: flashcard[]; }> {
+        queryLog('Get flashcards by ID');
         try {
-            const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            console.log(`Hora de ejecucion: ${hour}`);
             const [result] = await pool.query<RowDataPacket[]>(
                 `SELECT fd.flashcard_id AS flashcard_id, fd.question,  fd.answer, t.theme_name AS theme
               FROM flashcard_data fd 
@@ -182,6 +313,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async deleteFlashcard(flashcard_id: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        queryLog('Delete flashcard');
         const connection = await pool.getConnection();
         try {
 
@@ -204,27 +336,18 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             const original_answer_id = rows[0].original_answer_id;
 
             await connection.execute(
-                `DELETE FROM flashcard_data 
-                WHERE user_id = ? AND flashcard_id = ?;`,
-                [user_id, idToDelete],
-            );
-
-            if (original_answer_id) {
-                await connection.execute(
-                    `DELETE FROM answers 
-                    WHERE answer_id = ?;`,
-                    [original_answer_id],
-                );
-            }
-
-            await connection.execute(
                 `DELETE FROM users_questions 
                 WHERE user_id = ? AND question_id = ?;`,
                 [user_id, original_question_id],
             );
 
-            await connection.commit();
+            await connection.execute(
+                `DELETE FROM flashcard_data 
+                WHERE user_id = ? AND flashcard_id = ?;`,
+                [user_id, idToDelete],
+            );
 
+            await connection.commit();
 
             return {
                 success: true,
@@ -244,6 +367,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     /*Dashboard Data*/
 
     async getCountFlashcardsByTheme(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }[]; }> {
+        queryLog('Get count flashcards by theme');
         try {
             const [result] = await pool.query<RowDataPacket[]>(`
                 SELECT t.theme_name,                   
@@ -281,6 +405,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async getLastestFlashcardsCreated(user_id: string): Promise<{ success: boolean; message: string; data: { question: string, theme: string, createdAt: string }[]; }> {
+        queryLog('Get latest flashcards created');
         try {
             const [result] = await pool.query<latestFlashcardsData[]>(`
                 SELECT f.question, t.theme_name, f.created_at 
@@ -325,6 +450,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async getMaxFlashcardsByUser(user_id: string): Promise<{ success: boolean; message: string; count: number; }> {
+        queryLog('Get max flashcards by user');
         try {
             const [result] = await pool.query<RowDataPacket[]>(`
                 SELECT f.user_id,
@@ -360,6 +486,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async getThemeWithMaxFlashcards(user_id: string): Promise<{ success: boolean; message: string; data: { theme: string; count: number; }; }> {
+        queryLog('Get theme with max flashcards');
         try {
             const [result] = await pool.query<RowDataPacket[]>(`
                 SELECT t.theme_name,                   
@@ -414,6 +541,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     /*Theme Data*/
 
     async createTheme(user_id: string, theme_name: string): Promise<{ success: boolean; message: string }> {
+        queryLog('Create theme');
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
@@ -443,6 +571,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async getAllThemes(user_id: string): Promise<{ success: boolean; message: string; data: themeData[] }> {
+        queryLog('Get all themes');
         try {
             const [result] = await pool.query<RowDataPacket[]>(
                 `SELECT 
@@ -470,6 +599,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
 
     async deleteTheme(themeId: string, user_id: string): Promise<{ success: boolean; message: string; }> {
+        queryLog('Delete theme');
         try {
             await pool.query(
                 `DELETE 
@@ -490,6 +620,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
 
     async updateThemeStatus(user_id: string): Promise<{ success: boolean; message: string; }> {
+        queryLog('Update theme status');
         try {
             await pool.query(
                 `UPDATE users SET theme_setup = true 
@@ -508,7 +639,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
     }
 
     async getThemeStatus(user_id: string): Promise<{ success: boolean; message: string; theme_status: string; }> {
-
+        queryLog('Get theme status');
         try {
             const [result] = await pool.query<RowDataPacket[]>(`
                 SELECT theme_setup from users 
