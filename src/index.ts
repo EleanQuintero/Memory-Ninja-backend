@@ -8,6 +8,7 @@ import dashboardRouter from './routes/dashboardRouter'
 import { validateAuth } from './middlewares/validateAuth'
 import themeRouter from './routes/themeRouter'
 import deleteRouter from './routes/deleteUser'
+import createUserRouter from './routes/createUser'
 
 const PORT: number | string = env.PORT
 const app = express()
@@ -15,6 +16,7 @@ app.use(express.json())
 app.use(helmet())
 app.disable('x-powered-by')
 app.use('/api/questions', validateAuth, limiter({ minuteDuration: 1, maxRequest: 5 }), appRouter)
+app.use('/api/user/create', createUserRouter)
 app.use('/api/user/delete', deleteRouter)
 app.use('/api/user', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), userRouter)
 app.use('/api/dashboard', validateAuth, limiter({ minuteDuration: 1, maxRequest: 20 }), dashboardRouter)
