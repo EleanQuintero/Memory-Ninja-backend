@@ -6,17 +6,12 @@ import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardMo
 import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
 import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository";
 import { latestFlashcardsData } from "../../entities/dashboard/dashboardData";
+import { logger, queryLog } from "../../utils/logger";
 
 interface FlashcardRow extends RowDataPacket {
     flashcard_id: string;
     original_question_id: number;
     original_answer_id: number;
-}
-
-function queryLog(query: string): void {
-    const hour = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    console.log(`query: ${query} - Hora de ejecucion: ${hour}`);
-
 }
 
 
@@ -31,10 +26,10 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
                 'INSERT INTO users (id, name, lastName, email, role) VALUES (?, ?, ?, ?, ?)',
                 [user.id, user.name, user.lastName, user.email, user.role],
             )
-            console.log({ "Resultado": result })
+            logger.log({ "Resultado": result })
             return { message: "Usuario registrado exitosamente" }
         } catch (error: unknown) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido')
+            logger.error(error instanceof Error ? error.message : 'Error desconocido')
             throw new Error(`Error al crear usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
     }
@@ -50,11 +45,11 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             await connection.query('DELETE FROM users WHERE id = ?', [userId]);
 
             await connection.commit();
-            console.log("Usuario eliminado exitosamente");
+            logger.log("Usuario eliminado exitosamente");
             return { message: "Usuario eliminado exitosamente" };
         } catch (error: unknown) {
             await connection.rollback();
-            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            logger.error(error instanceof Error ? error.message : 'Error desconocido');
             throw new Error(`Error al eliminar usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         } finally {
             connection.release();
@@ -281,7 +276,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
         } catch (error: unknown) {
             await connection.rollback();
-            console.error('Error insertando flashcards:', error);
+            logger.error('Error insertando flashcards:', error);
             return {
                 success: false,
                 message: `Error insertando flashcards: ${error instanceof Error ? error.message : 'Error desconocido'}`,
@@ -306,7 +301,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
             return { success: true, message: "Datos obtenidos de forma exitosa", data: flashcards }
         } catch (error) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido')
+            logger.error(error instanceof Error ? error.message : 'Error desconocido')
             throw new Error(`Error al obtener los datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
 
         }
@@ -395,7 +390,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
             return { success: true, message: "datos obtenidos exitosamente", data: data }
         } catch (error) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido')
+            logger.error(error instanceof Error ? error.message : 'Error desconocido')
             return {
                 success: false,
                 message: `Error al obtener el conteo de flashcards por tema`,
@@ -439,7 +434,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             }
 
         } catch (error) {
-            console.error(error)
+            logger.error(error)
             return {
                 success: false,
                 message: "Error al obtener los datos",
@@ -476,7 +471,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
             return { success: true, message: "datos obtenidos de forma exitosa", count: data[0].count }
         } catch (error) {
-            console.error(error)
+            logger.error(error)
             return {
                 success: false,
                 message: "Error al obtener los datos",
@@ -524,7 +519,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
         } catch (error) {
 
-            console.error(error)
+            logger.error(error)
             return {
                 success: false,
                 message: "Error al obtener los datos",
@@ -563,7 +558,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         }
         catch (error: unknown) {
             await connection.rollback();
-            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            logger.error(error instanceof Error ? error.message : 'Error desconocido');
             return { success: false, message: `Error al crear el tema` };
         } finally {
             connection.release();
@@ -592,7 +587,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
             return { success: true, message: "Datos obtenidos de forma exitosa", data };
         } catch (error) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            logger.error(error instanceof Error ? error.message : 'Error desconocido');
             return { success: false, message: `Error al obtener los temas`, data: [] };
         }
     }
@@ -610,7 +605,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
             return { success: true, message: "Tema eliminado exitosamente" };
         } catch (error) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            logger.error(error instanceof Error ? error.message : 'Error desconocido');
             return {
                 success: false,
                 message: `Error al eliminar el tema`,
@@ -630,7 +625,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
 
             return { success: true, message: "Estado de tema actualizado" };
         } catch (error) {
-            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            logger.error(error instanceof Error ? error.message : 'Error desconocido');
             return {
                 success: false,
                 message: `Error al actualizar el estado del tema`,
@@ -651,7 +646,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
             return { success: true, message: "Estado de tema obtenido exitosamente", theme_status: theme_status.theme_setup };
         } catch (error) {
 
-            console.error(error instanceof Error ? error.message : 'Error desconocido');
+            logger.error(error instanceof Error ? error.message : 'Error desconocido');
             return {
                 success: false,
                 message: `Error al obtener el estado del tema`,

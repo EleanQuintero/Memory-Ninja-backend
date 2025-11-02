@@ -14,10 +14,18 @@ beforeAll(() => {
     console.error = jest.fn();
 });
 
-afterAll(() => {
+afterAll(async () => {
     // Restore original console methods
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
+
+    // Close database connection pool to prevent hanging tests
+    try {
+        const { pool } = await import('../infrastructure/db/mysql');
+        await pool.end();
+    } catch (error) {
+        // Ignore error if pool is not initialized
+    }
 });
 
 // Global test database cleanup
