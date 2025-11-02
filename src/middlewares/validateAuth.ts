@@ -2,6 +2,7 @@ import { verifyToken } from "@clerk/backend";
 import { NextFunction, Request, Response } from "express";
 import { VerifiedToken } from "../models/interfaces/auth";
 import { env } from "../config/env";
+import { logger } from "../utils/logger";
 
 declare global {
     namespace Express {
@@ -27,7 +28,7 @@ export const validateAuth = async (req: Request, res: Response, next: NextFuncti
         }
 
         const verifiedToken = await verifyToken(token, {
-            jwtKey: env.CLERK_JWT_KEY,
+            jwtKey: process.env.CLERK_JWT_KEY,
         })
 
         const tokenData = verifiedToken as unknown as VerifiedToken
@@ -42,7 +43,7 @@ export const validateAuth = async (req: Request, res: Response, next: NextFuncti
 
         next()
     } catch (error) {
-        console.error('Error al validar el token:', error);
+        logger.error('Error al validar el token:', error);
         res.status(401).json({ message: 'Token de autorización inválido o expirado' });
 
     }

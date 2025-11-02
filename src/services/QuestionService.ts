@@ -1,4 +1,5 @@
 import { IAInterface } from "../ia/IAInterface";
+import { logger } from "../utils/logger";
 
 export class QuestionService {
     constructor(private iaModel: IAInterface) { }
@@ -8,7 +9,7 @@ export class QuestionService {
             const answer = await this.iaModel.generateAnswer(tema, pregunta)
             return answer
         } catch (error) {
-            console.error("Error detallado en handleQuestion:", error)
+            logger.error("Error detallado en handleQuestion:", error)
             throw new Error("Error al generar la respuesta para una sola pregunta")
         }
     }
@@ -18,7 +19,7 @@ export class QuestionService {
             const answer = await this.iaModel.generateMultipleAnswer(tema, pregunta)
             return answer
         } catch (error) {
-            console.error("Error detallado en handleMultipleQuestion:", error)
+            logger.error("Error detallado en handleMultipleQuestion:", error)
             throw new Error("Error al generar la respuesta para muchas preguntas")
         }
     }
