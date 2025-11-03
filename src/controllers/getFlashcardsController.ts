@@ -12,8 +12,8 @@ export const getFlashcardController = async (req: Request, res: Response): Promi
             return;
         }
         const response = await userService.getFlashCards(userId)
-        console.log({success: response.success, message: response.message})
-        const data = response.data;  
+        console.log({ success: response.success, message: response.message })
+        const data = response.data;
         const flashcardData = data.map((flashcard) => ({
             flashcard_id: flashcard.flashcard_id?.slice(0, 8),
             question: flashcard.question,
@@ -23,9 +23,9 @@ export const getFlashcardController = async (req: Request, res: Response): Promi
         res.status(201).json(flashcardData)
     } catch (error: unknown) {
         if (error instanceof Error) {
-            res.status(500).json({error: error.message})
+            res.status(500).json({ error: error.message })
         } else {
-            res.status(500).json({error: 'Ha ocurrido un error desconocido'})
+            res.status(500).json({ error: 'Ha ocurrido un error desconocido' })
         }
     }
 }
