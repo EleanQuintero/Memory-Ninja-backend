@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { userService } from "../infrastructure/di/userContainer";
+import { userService } from "../infrastructure/di/userContainer.js";
 
 
 

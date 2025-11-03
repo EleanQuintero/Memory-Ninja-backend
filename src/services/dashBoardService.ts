@@ -1,4 +1,4 @@
-import { IDashboardRepository } from "../models/interfaces/DashboardRepository";
+import { IDashboardRepository } from "../models/interfaces/DashboardRepository.js";
 
 export class DashboardService {
     constructor(private dashboardRepository: IDashboardRepository) { }

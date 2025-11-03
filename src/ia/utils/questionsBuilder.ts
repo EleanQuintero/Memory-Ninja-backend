@@ -1,4 +1,4 @@
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 export function questionsPrompt(tema: string, pregunta: string): string {
     if (!env.AI_ANSWERS_PROMPT) {

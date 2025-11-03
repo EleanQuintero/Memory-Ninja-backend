@@ -1,6 +1,6 @@
-import { env } from '../../config/env'
-import { GeminiModel } from '../../ia/GeminiModel'
-import { QuestionService } from '../../services/QuestionService'
+import { env } from '../../config/env.js'
+import { GeminiModel } from '../../ia/GeminiModel.js'
+import { QuestionService } from '../../services/QuestionService.js'
 
 interface serviceProps {
     model: string
