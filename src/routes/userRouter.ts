@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { createFlashcardController } from "../controllers/createFlashcardController";
-import { getFlashcardController } from "../controllers/getFlashcardsController";
-import { deleteFlashcardController } from "../controllers/deleteFlashcardController";
-import { validateID } from "../middlewares/validateIDInput";
-import { idValidatorSchema } from "../schemes/idValidator";
+import { createFlashcardController } from "../controllers/createFlashcardController.js";
+import { getFlashcardController } from "../controllers/getFlashcardsController.js";
+import { deleteFlashcardController } from "../controllers/deleteFlashcardController.js";
+import { validateID } from "../middlewares/validateIDInput.js";
+import { idValidatorSchema } from "../schemes/idValidator.js";
 
 const userRouter = Router()
 

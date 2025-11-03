@@ -21,7 +21,7 @@ afterAll(async () => {
 
     // Close database connection pool to prevent hanging tests
     try {
-        const { pool } = await import('../infrastructure/db/mysql');
+        const { pool } = await import('../infrastructure/db/mysql.js');
         await pool.end();
     } catch (error) {
         // Ignore error if pool is not initialized

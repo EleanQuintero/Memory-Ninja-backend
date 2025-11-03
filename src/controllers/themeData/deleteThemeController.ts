@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { themeService } from "../../infrastructure/di/themeContainer"
+import { themeService } from "../../infrastructure/di/themeContainer.js"
 
 export const deleteThemeController = async (req: Request, res: Response): Promise<void> => {
     try {

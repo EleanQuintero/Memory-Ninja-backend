@@ -1,7 +1,7 @@
-import { UserData } from "../entities/users/userModel";
-import { MySQLRepository } from "../infrastructure/db/MySQLRepository";
-import { flashcardData } from "../models/interfaces/flashcardData";
-import { flashcard, flashcardToSync } from "../entities/flashcard/flashCardModel";
+import { UserData } from "../entities/users/userModel.js";
+import { MySQLRepository } from "../infrastructure/db/MySQLRepository.js";
+import { flashcardData } from "../models/interfaces/flashcardData.js";
+import { flashcard, flashcardToSync } from "../entities/flashcard/flashCardModel.js";
 
 export class UserService {
     constructor(private userRepo: MySQLRepository) { }

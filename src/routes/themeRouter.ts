@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { getAllThemesController } from "../controllers/themeData/getAllThemesController";
-import { deleteThemeController } from "../controllers/themeData/deleteThemeController";
-import { createThemeController } from "../controllers/themeData/createThemeController";
-import { validateBody } from "../middlewares/validateBody";
-import { themeValidatorSchema } from "../schemes/themeValidator";
-import { getThemeStatusController } from "../controllers/themeData/getThemeStatusController";
-import { updateThemeStatusController } from "../controllers/themeData/updateThemeStatusController";
+import { getAllThemesController } from "../controllers/themeData/getAllThemesController.js";
+import { deleteThemeController } from "../controllers/themeData/deleteThemeController.js";
+import { createThemeController } from "../controllers/themeData/createThemeController.js";
+import { validateBody } from "../middlewares/validateBody.js";
+import { themeValidatorSchema } from "../schemes/themeValidator.js";
+import { getThemeStatusController } from "../controllers/themeData/getThemeStatusController.js";
+import { updateThemeStatusController } from "../controllers/themeData/updateThemeStatusController.js";
 
 
 const themeRouter = Router();

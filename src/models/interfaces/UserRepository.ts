@@ -1,6 +1,6 @@
-import { UserData } from "../../entities/users/userModel";
-import { flashcardData } from "./flashcardData";
-import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
+import { UserData } from "../../entities/users/userModel.js";
+import { flashcardData } from "./flashcardData.js";
+import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel.js";
 
 export interface IUserRepository {
     saveUser(user: UserData): Promise<{ message: string }>

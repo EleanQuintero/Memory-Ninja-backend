@@ -1,5 +1,5 @@
-import { IAInterface } from "../ia/IAInterface";
-import { logger } from "../utils/logger";
+import { IAInterface } from "../ia/IAInterface.js";
+import { logger } from "../utils/logger.js";
 
 export class QuestionService {
     constructor(private iaModel: IAInterface) { }
