@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { dashboardService } from "../../infrastructure/di/dashboardContainer"
+import { dashboardService } from "../../infrastructure/di/dashboardContainer.js"
 
 export const getMaxFlashcardsByUser = async (req: Request, res: Response): Promise<void> => {
     try {

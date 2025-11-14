@@ -1,14 +1,14 @@
 import express from 'express'
-import { env } from './config/env'
-import appRouter from './routes/app'
-import userRouter from './routes/userRouter'
+import { env } from './config/env.js'
+import appRouter from './routes/app.js'
+import userRouter from './routes/userRouter.js'
 import helmet from 'helmet'
-import { limiter } from './services/rateLimiter'
-import dashboardRouter from './routes/dashboardRouter'
-import { validateAuth } from './middlewares/validateAuth'
-import themeRouter from './routes/themeRouter'
-import deleteRouter from './routes/deleteUser'
-import createUserRouter from './routes/createUser'
+import { limiter } from './services/rateLimiter.js'
+import dashboardRouter from './routes/dashboardRouter.js'
+import { validateAuth } from './middlewares/validateAuth.js'
+import themeRouter from './routes/themeRouter.js'
+import deleteRouter from './routes/deleteUser.js'
+import createUserRouter from './routes/createUser.js'
 
 const PORT: number | string = env.PORT
 const app = express()

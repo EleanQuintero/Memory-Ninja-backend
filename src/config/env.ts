@@ -1,6 +1,3 @@
-import dotenv from 'dotenv'
-
-dotenv.config()
 
 // Validación temprana - el app falla al inicio si faltan variables críticas
 if (!process.env.GEMINI_KOGA || !process.env.GEMINI_KURAYAMI) {

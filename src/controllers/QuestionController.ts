@@ -1,6 +1,6 @@
 import { Response } from 'express'
-import { QuestionRequest } from './QuestionsRequest'
-import { resolveServices } from '../infrastructure/di/container'
+import { QuestionRequest } from './QuestionsRequest.js'
+import { resolveServices } from '../infrastructure/di/container.js'
 
 
 export async function askQuestion(req: QuestionRequest, res: Response): Promise<void> {

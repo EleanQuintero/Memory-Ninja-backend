@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getCountFlashcardsByTheme } from "../controllers/dashboardData/getCountFlashcardsByTheme";
-import { getLastestFlashcardsCreated } from "../controllers/dashboardData/getLastestFlashcardsCreated";
-import { getMaxFlashcardsByUser } from "../controllers/dashboardData/getMaxFlashcardsByUser";
-import { getThemeWithMaxFlashcards } from "../controllers/dashboardData/getThemeWithMaxFlashcards";
+import { getCountFlashcardsByTheme } from "../controllers/dashboardData/getCountFlashcardsByTheme.js";
+import { getLastestFlashcardsCreated } from "../controllers/dashboardData/getLastestFlashcardsCreated.js";
+import { getMaxFlashcardsByUser } from "../controllers/dashboardData/getMaxFlashcardsByUser.js";
+import { getThemeWithMaxFlashcards } from "../controllers/dashboardData/getThemeWithMaxFlashcards.js";
 
 const dashboardRouter = Router()
 
