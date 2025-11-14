@@ -23,8 +23,8 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         queryLog('Save user');
         try {
             const [result] = await pool.query(
-                'INSERT INTO users (id, name, lastName, email, role) VALUES (?, ?, ?, ?, ?)',
-                [user.id, user.name, user.lastName, user.email, user.role],
+                'INSERT INTO users (id, email, role, username) VALUES (?, ?, ?, ?)',
+                [user.id, user.email, user.role, user.userName],
             )
             logger.log({ "Resultado": result })
             return { message: "Usuario registrado exitosamente" }
