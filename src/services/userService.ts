@@ -1,6 +1,5 @@
 import { UserData } from "../entities/users/userModel";
 import { MySQLRepository } from "../infrastructure/db/MySQLRepository";
-import { flashcardData } from "../models/interfaces/flashcardData";
 import { flashcard, flashcardToSync } from "../entities/flashcard/flashCardModel";
 
 export class UserService {
