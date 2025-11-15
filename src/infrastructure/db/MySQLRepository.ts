@@ -24,7 +24,7 @@ export class MySQLRepository implements IUserRepository, IDashboardRepository, I
         try {
             const [result] = await pool.query(
                 'INSERT INTO users (id, email, role, username) VALUES (?, ?, ?, ?)',
-                [user.id, user.email, user.role, user.userName],
+                [user.id, user.email, user.role, user.username],
             )
             logger.log({ "Resultado": result })
             return { message: "Usuario registrado exitosamente" }
