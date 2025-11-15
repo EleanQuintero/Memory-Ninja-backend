@@ -1,4 +1,4 @@
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 export function manyQuestionsPrompt(tema: string, readyQuestions: string): string {
   if (!env.AI_MANY_ANSWERS_PROMPT) {

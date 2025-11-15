@@ -1,4 +1,4 @@
-import { IThemeRepository, themeData } from "../models/interfaces/ThemeRepository";
+import { IThemeRepository, themeData } from "../models/interfaces/ThemeRepository.js";
 
 export class ThemeService {
 

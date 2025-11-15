@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
-import { IAInterface } from "./IAInterface";
-import { manyQuestionsPrompt } from "./utils/manyQuestionsBuilder";
-import { questionsPrompt } from "./utils/questionsBuilder";
+import { IAInterface } from "./IAInterface.js";
+import { manyQuestionsPrompt } from "./utils/manyQuestionsBuilder.js";
+import { questionsPrompt } from "./utils/questionsBuilder.js";
 
 interface GenerationConfig {
   responseMimeType:

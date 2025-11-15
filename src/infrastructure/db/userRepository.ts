@@ -1,5 +1,5 @@
-import { UserData } from "../../entities/users/userModel";
+import { UserData } from "../../entities/users/userModel.js";
 
 export interface UserRepository {
-   createUser(data: UserData): Promise<{message: string}>
+   createUser(data: UserData): Promise<{ message: string }>
 }

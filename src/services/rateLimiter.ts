@@ -1,6 +1,6 @@
 import rateLimit, { RateLimitRequestHandler, Options } from 'express-rate-limit'
 import { Request } from 'express'
-import { USER_PLANS } from '../entities/users/userPlans'
+import { USER_PLANS } from '../entities/users/userPlans.js'
 
 interface limiter {
     minuteDuration: number,

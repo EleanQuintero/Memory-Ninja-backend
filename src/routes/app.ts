@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { askQuestion } from "../controllers/QuestionController";
-import { validateBody } from "../middlewares/validateBody";
-import { questionsRequestSchema } from "../schemes/questionRequest";
+import { askQuestion } from "../controllers/QuestionController.js";
+import { validateBody } from "../middlewares/validateBody.js";
+import { questionsRequestSchema } from "../schemes/questionRequest.js";
 
 
 

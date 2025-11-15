@@ -1,12 +1,12 @@
-import { pool } from "./mysql";
-import { UserData } from "../../entities/users/userModel";
-import { IUserRepository } from "../../models/interfaces/UserRepository";
+import { pool } from "./mysql.js";
+import { UserData } from "../../entities/users/userModel.js";
+import { IUserRepository } from "../../models/interfaces/UserRepository.js";
 import { ResultSetHeader, RowDataPacket, FieldPacket } from 'mysql2';
-import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel";
-import { IDashboardRepository } from "../../models/interfaces/DashboardRepository";
-import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository";
-import { latestFlashcardsData } from "../../entities/dashboard/dashboardData";
-import { logger, queryLog } from "../../utils/logger";
+import { flashcard, flashcardToSync } from "../../entities/flashcard/flashCardModel.js";
+import { IDashboardRepository } from "../../models/interfaces/DashboardRepository.js";
+import { IThemeRepository, themeData } from "../../models/interfaces/ThemeRepository.js";
+import { latestFlashcardsData } from "../../entities/dashboard/dashboardData.js";
+import { logger, queryLog } from "../../utils/logger.js";
 
 interface FlashcardRow extends RowDataPacket {
     flashcard_id: string;

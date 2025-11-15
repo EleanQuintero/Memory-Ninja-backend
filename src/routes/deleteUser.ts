@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteUserController } from "../controllers/userDataController";
+import { deleteUserController } from "../controllers/userDataController.js";
 
 
 const deleteRouter = Router()

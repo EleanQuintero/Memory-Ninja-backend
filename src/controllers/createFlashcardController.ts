@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { userService } from "../infrastructure/di/userContainer";
-import { logger } from "../utils/logger";
+import { userService } from "../infrastructure/di/userContainer.js";
+import { logger } from "../utils/logger.js";
 
 export const createFlashcardController = async (req: Request, res: Response): Promise<void> => {
     try {

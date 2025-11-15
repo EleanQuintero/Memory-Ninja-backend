@@ -1,8 +1,8 @@
 import { verifyToken } from "@clerk/backend";
 import { NextFunction, Request, Response } from "express";
-import { VerifiedToken } from "../models/interfaces/auth";
-import { env } from "../config/env";
-import { logger } from "../utils/logger";
+import { VerifiedToken } from "../models/interfaces/auth.js";
+import { env } from "../config/env.js";
+import { logger } from "../utils/logger.js";
 
 declare global {
     namespace Express {
