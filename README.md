@@ -1,4 +1,4 @@
-# 🎴 Flashcards API
+# 🎴 MemoryNinja API
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg)](https://nodejs.org/)
