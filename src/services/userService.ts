@@ -26,4 +26,9 @@ export class UserService {
         return this.userRepo.deleteUser(user_id)
     }
 
+    async getFlashcardCount(userId: string): Promise<number> {
+        const result = await this.userRepo.getMaxFlashcardsByUser(userId)
+        return result.count
+    }
+
 }
