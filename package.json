@@ -41,6 +41,7 @@
     "@clerk/backend": "2.18.3",
     "@google/genai": "1.25.0",
     "@typescript-eslint/eslint-plugin": "8.32.1",
+    "@upstash/redis": "^1.36.2",
     "express": "5.1.0",
     "express-rate-limit": "8.1.0",
     "helmet": "8.1.0",

@@ -31,6 +31,8 @@ interface EnvConfig {
     AI_MANY_ANSWERS_PROMPT: string | undefined
     AI_ANSWERS_PROMPT: string | undefined
     DB_DATA: DatabaseConfig
+    UPSTASH_REDIS_REST_URL: string | undefined
+    UPSTASH_REDIS_REST_TOKEN: string | undefined
 }
 
 export const env: EnvConfig = {
@@ -50,4 +52,6 @@ export const env: EnvConfig = {
         waitForConnections: process.env.DB_WAIT_FOR_CONNECTION === 'true',
         connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
     },
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
 }
