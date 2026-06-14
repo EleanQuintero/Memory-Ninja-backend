@@ -18,6 +18,11 @@ export default {
         }]
     },
 
+    // Resolve NodeNext ".js" import extensions to their ".ts" sources
+    moduleNameMapper: {
+        '^(\\.{1,2}/.*)\\.js$': '$1'
+    },
+
     // Coverage configuration
     collectCoverageFrom: [
         'src/**/*.ts',
