@@ -9,6 +9,5 @@ consts
 api.http
 
 DEPLOYMENT.md
-.env.example
 
 PRODUCTION_READY_REPORT.md
