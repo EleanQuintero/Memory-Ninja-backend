@@ -1,12 +1,13 @@
 import mysql from 'mysql2/promise'
 import { env } from '../../config/env.js'
 
-if (!env.DB_DATA.host || !env.DB_DATA.user || !env.DB_DATA.password || !env.DB_DATA.name || !env.DB_DATA.waitForConnections || !env.DB_DATA.connectionLimit) {
+if (!env.DB_DATA.host || !env.DB_DATA.user || !env.DB_DATA.password || !env.DB_DATA.name) {
     throw new Error('Missing required database configuration in environment variables')
 }
 
 export const pool = mysql.createPool({
     host: env.DB_DATA.host,
+    port: env.DB_DATA.port,
     user: env.DB_DATA.user,
     password: env.DB_DATA.password,
     database: env.DB_DATA.name,

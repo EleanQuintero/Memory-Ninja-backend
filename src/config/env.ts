@@ -14,6 +14,7 @@ if (!process.env.CLERK_JWT_KEY) {
 
 interface DatabaseConfig {
     host: string | undefined
+    port: number
     user: string | undefined
     password: string | undefined
     name: string | undefined
@@ -46,6 +47,7 @@ export const env: EnvConfig = {
     AI_ANSWERS_PROMPT: process.env.AI_ANSWERS_PROMPT,
     DB_DATA: {
         host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT) || 3306,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         name: process.env.DB_NAME,
