@@ -1,0 +1,10 @@
+# Nixpacks pins corepack@0.24.1, which is too old to launch pnpm 11.x and throws
+# ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING. Override the install phase to upgrade
+# corepack first, then let it resolve the pnpm version from package.json's
+# packageManager field.
+[phases.install]
+cmds = [
+  "npm install -g corepack@latest",
+  "corepack enable",
+  "pnpm install --frozen-lockfile",
+]
