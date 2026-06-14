@@ -1,12 +1,11 @@
 import { env } from "../../config/env.js";
+import { DEFAULT_ANSWER_PROMPT } from "./prompts.js";
 
 export function questionsPrompt(tema: string, pregunta: string): string {
-    if (!env.AI_ANSWERS_PROMPT) {
-        throw new Error('AI_PROMPT no está definido en el archivo .env');
-    }
+    const template = env.AI_ANSWERS_PROMPT ?? DEFAULT_ANSWER_PROMPT;
 
     // Reemplazo seguro de variables
-    return env.AI_ANSWERS_PROMPT
+    return template
         .replace(/{{tema}}/g, tema)
         .replace(/{{pregunta}}/g, pregunta);
 }
